@@ -182,7 +182,6 @@ public class NaiveBayesClassifierTest {
 	 */
 	@Test
 	public void testNaiveBayesClassifierBinaryModelSumsToOne() {
-		Double threshold = 0.0001d; // pseudo-sum to 1
 		Double probSum;
 		this.binaryTrainer.train(this.trainingFile);
 		// classProbs should sum to 1
