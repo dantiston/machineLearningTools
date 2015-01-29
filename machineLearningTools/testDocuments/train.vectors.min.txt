@@ -1,0 +1,30 @@
+talk.politics.guns gun:1
+talk.politics.guns gun:1
+talk.politics.guns gun:1
+talk.politics.guns gun:1
+talk.politics.guns gun:1
+talk.politics.guns gun:1
+talk.politics.guns gun:1
+talk.politics.guns gun:1
+talk.politics.misc com:1 your:1 cheaper:1
+talk.politics.guns com:1 your:1 
+talk.politics.misc com:1 your:1 
+talk.politics.misc com:1
+talk.politics.misc com:1
+talk.politics.misc com:1
+talk.politics.misc com:1
+talk.politics.mideast how:1 waste:1
+talk.politics.misc how:1
+talk.politics.misc how:1
+talk.politics.misc how:1
+talk.politics.misc how:1
+talk.politics.mideast israel:1
+talk.politics.mideast israel:1
+talk.politics.mideast israel:1
+talk.politics.mideast israel:1
+talk.politics.mideast israel:1
+talk.politics.guns
+talk.politics.mideast
+talk.politics.mideast
+talk.politics.mideast
+talk.politics.mideast

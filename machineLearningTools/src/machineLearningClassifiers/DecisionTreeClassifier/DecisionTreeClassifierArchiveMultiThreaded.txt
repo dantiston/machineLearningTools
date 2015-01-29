@@ -1,0 +1,612 @@
+package machineLearningClassifiers.DecisionTreeClassifier;
+
+import static machineLearningTools.MLMath.informationGain;
+
+import java.io.BufferedWriter;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.ConcurrentModificationException;
+import java.util.HashSet;
+import java.util.Set;
+
+import machineLearningTools.ConfusionMatrix;
+import machineLearningTools.Data;
+import machineLearningTools.Document;
+import machineLearningTools.MachineLearningClassifier;
+import machineLearningTools.Rule;
+import machineLearningTools.Tree;
+
+/**
+ * DecisionTreeClassifier
+ *
+ * DecisionTreeClassifier has methods for training, classifying,
+ *   and testing, as well as generating output documents for these <br>
+ *
+ * Input: <br>
+ * 	Data: training, testing <br>
+ * 	Parameters: <br>
+ * 		maxDepth: maximum depth to recurse down <br>
+ *   	minGain: minimum information gain at each node to
+ *   		continue recursion <br>
+ *   	modelFile: filename to output model file containing
+ *   		paths to leaves with associated labels->probabilities <br>
+ *   	sysOutput: filename to output system output containing
+ *   		a sorted list of instances with label to probabilities <br>
+ * Output: <br>
+ * 	stdout: confusion matrices over training and testing data <br>
+ * 	Files: <br>
+ * 		modelFile: file containing paths to leaves with
+ * 			number of instances at leaf and number of instances
+ * 			per label at leaf as probabilities <br>
+ *   	sysOutput: file containing a sorted list of instances
+ *   		with label to probabilities mappings <br><br>
+ *
+ * This classifier implements the MachineLearningClassifier interface
+ *
+ * @author T.J. Trimble
+ */
+public class DecisionTreeClassifier implements MachineLearningClassifier {
+	//// Variables
+	// Parameters
+	private int maxDepth;
+	private Double minGain;
+	private String sysOutputFile;
+	private String modelFile;
+
+	// Core Values
+	private Data trainingData;
+	private Tree tree;
+	private ArrayList<Rule> rules;
+
+	// Output values
+	private BufferedWriter modelOutput;
+	private BufferedWriter sysOutput;
+
+	/**
+	 * Construct a new DecisionTreeClassifier object to do classification.
+	 *
+	 * @param maxDepth must be greater than or equal to 1
+	 * @param minGain must be greater than or equal to 0
+	 * @param sysOutputFileName
+	 * @param modelFileName
+	 * @author T.J. Trimble
+	 */
+	public DecisionTreeClassifier(int maxDepth, Double minGain, String sysOutputFileName, String modelFileName) throws IllegalArgumentException {
+		if (minGain == null || sysOutputFileName == null || modelFileName == null) {
+			throw new NullPointerException("DecisionTreeClassifier constructor received a null argument;");
+		}
+		if (maxDepth < 1 || minGain < 0) {
+			throw new IllegalArgumentException("DecisionTreeClassifier constructor parameter preconditions violated;");
+		}
+		// Test if files exist
+//		if ((!new File(sysOutputFileName).isFile()) || (!new File(modelFileName).isFile())) {
+//			throw new IllegalArgumentException("DecisionTreeClassifier sysOutput file or model file not found;");
+//		}
+		this.maxDepth = maxDepth;
+		this.minGain = minGain;
+		this.sysOutputFile = sysOutputFileName;
+		this.modelFile = modelFileName;
+	}
+
+	@Override
+	public void train(String trainingDataFileName) {
+		// Load data
+		if (trainingDataFileName == null) {
+			throw new NullPointerException();
+		}
+		this.trainingData = new Data(trainingDataFileName);
+		// Recurse to build decision tree
+		this.tree = this.calculateTree(this.trainingData.getIDs(), 1);
+		// Calculate rules and save to object
+		this.rules = this.tree.getRules();
+		// Create model file
+		try {
+			this.modelOutput = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(this.modelFile), "utf-8"));
+			this.writeModelFile(this.modelOutput);
+			this.modelOutput.close();
+		}
+		catch (IOException e) {
+			System.err.println("Error writing model file.");
+			e.printStackTrace();
+		}
+	}
+
+	@Override
+	public void test(String testingDataFileName, String testingLabel) {
+		if (testingDataFileName == null || testingLabel == null) {
+			throw new NullPointerException();
+		}
+		Data testData = new Data(testingDataFileName);
+		Data systemOutput = this.classify(testData);
+		this.outputResults(systemOutput, testingLabel);
+	}
+
+	/**
+	 * For training, first calculate the top node entropy, then
+	 * calculate the tree with the *TOP* parent set to null
+	 *
+	 * @param docIDs must be non-null
+	 * @param depth must be >= 0
+	 * @return Tree object with tree and rules set
+	 *
+	 */
+	private DecisionTree calculateTree(Set<Integer> docIDs, int depth) {
+		if (docIDs == null) {
+			throw new NullPointerException("CalculateTree() docIDs parameter must be non-null;");
+		}
+		if (depth < 0) {
+			throw new IllegalArgumentException("CalculateTree() depth parameter must be >= 0;");
+		}
+		DecisionTree root = new DecisionTree(this.trainingData);
+		root.setEntropy(this.trainingData.getEntropy(docIDs));
+		DecisionTreeClassifierHelper classifier = new DecisionTreeClassifierHelper(root, this.maxDepth, this);
+		classifier.run();
+		try {
+			classifier.thread.join();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		return classifier.getTree();
+
+//		Double topEnt = this.trainingData.getEntropy(docIDs);
+//		return this.calculateTree(docIDs, depth, topEnt, null, "*TOP*");
+	}
+
+//	private Tree calculateTree(Set<Integer> docIDs, int depth) {
+//		if (docIDs == null) {
+//			throw new NullPointerException("CalculateTree() docIDs parameter must be non-null;");
+//		}
+//		if (depth < 0) {
+//			throw new IllegalArgumentException("CalculateTree() depth parameter must be >= 0;");
+//		}
+//		Double topEnt = this.trainingData.getEntropy(docIDs);
+//		return this.calculateTree(docIDs, depth, topEnt, null, "*TOP*");
+//	}
+
+	/**
+	 * For training, calculate the decision tree by splitting
+	 * on the feature resulting in the highest information gain
+	 *
+	 * @param docIDs
+	 * @param depth must be >= 0
+	 * @param topEnt must be >= 0
+	 * @param parent *TOP* node is null
+	 * @param nodeFeature
+	 * @return
+	 */
+//	private Tree calculateTree(Set<Integer> docIDs, int depth, Double topEnt, Tree parent, String nodeFeature) throws IllegalArgumentException {
+//		if (docIDs == null || topEnt == null || nodeFeature == null) {
+//			throw new NullPointerException();
+//		}
+//		if (depth < 0 || topEnt < 0) {
+//			throw new IllegalArgumentException();
+//		}
+//
+//		//// Initializations
+//		// Initialize this node
+//		Tree result = new Tree(nodeFeature, docIDs, depth, this.trainingData);
+//		if (docIDs.size() <= 1 || depth >= this.maxDepth) {
+//			return result;
+//		}
+//		// If not single leaf and haven't gotten to maxDepth...
+//		Double bestGain = 0.0d;
+//		String bestFeature = "";
+//		Double bestWithEnt = 0.0d;
+//		Double bestWithOutEnt = 0.0d;
+//		HashSet<Integer> documentsWithSplit = null;
+//		HashSet<Integer> documentsWithOutSplit = null;
+//		// Initializations
+//		HashSet<Integer> documentsWithFeature;
+//		HashSet<Integer> documentsWithOutFeature;
+//		Tree withChild;
+//		Tree withOutChild;
+//		Double withEnt;
+//		Double withOutEnt;
+//		Double gain;
+//
+//		//// Loop through features to get best
+//		// Get features from these documents
+//		HashSet<String> features = new HashSet<String>();
+//		for (Integer id: docIDs) {
+//			features.addAll(this.trainingData.getFeatures(id));
+//		}
+//
+//		//// Split documents based on feature
+//		// Loop through each feature in document set to
+//		// find the best split
+//		for (String feature: features) {
+//			// Split documents based on feature
+//			documentsWithFeature = new HashSet<Integer>();
+//			documentsWithOutFeature = new HashSet<Integer>();
+//			for (Integer id: docIDs) {
+//				if (this.trainingData.getDoc(id).contains(feature)) {
+//					documentsWithFeature.add(id);
+//				}
+//				else {
+//					documentsWithOutFeature.add(id);
+//				}
+//			}
+//
+//			// Calculate entropy and information gain
+//			withEnt = this.trainingData.getEntropy(documentsWithFeature);
+//			withOutEnt = this.trainingData.getEntropy(documentsWithOutFeature);
+//			gain = informationGain(withEnt, documentsWithFeature.size(), withOutEnt, documentsWithOutFeature.size(), topEnt);
+//
+//			// Store values for best information gain
+//			if (gain > bestGain) {
+//				bestGain = gain;
+//				bestFeature = feature;
+//				documentsWithSplit = documentsWithFeature;
+//				documentsWithOutSplit = documentsWithOutFeature;
+//				bestWithEnt = withEnt;
+//				bestWithOutEnt = withOutEnt;
+//			}
+//		}
+//
+//		if (bestGain == 0.0d || bestGain < this.minGain) {
+//			return result;
+//		}
+//
+//		// Recurse down each path
+//		String notFeature = "!"+bestFeature;
+//		withChild = this.calculateTree(documentsWithSplit, depth+1, bestWithEnt, result, bestFeature);
+//		withOutChild = this.calculateTree(documentsWithOutSplit, depth+1, bestWithOutEnt, result, notFeature);
+//		if ((withChild != null) && (withOutChild != null)) {
+//			result.addChild(withChild);
+//			result.addChild(withOutChild);
+//		}
+//		return result;
+//	}
+
+	/**
+	 * Evaluate each document in testingData to match with
+	 * a rule from the training and assign a label
+	 * @param testingData
+	 * @return
+	 */
+	@Override
+	public Data classify(Data testingData) {
+		if (testingData == null) {
+			throw new NullPointerException();
+		}
+		if (this.rules == null) {
+			System.err.println("Classify called before training completed;");
+			throw new NullPointerException();
+		}
+		// Classify data
+		for (Document document: testingData.getDocs()) {
+			for (Rule rule: this.rules) {
+				if (rule.accepts(document)) {
+					document.setSysOutput(rule);
+					break; // out of rules
+				}
+			}
+		}
+		return testingData;
+	}
+
+	/**
+	 * @param testResult
+	 * @throws IOException
+	 */
+	@Override
+	public void outputResults(Data testResult, String trainOrTest) {
+		if (testResult == null || trainOrTest == null) {
+			throw new NullPointerException();
+		}
+		try {
+			// Open the output files
+			this.sysOutput = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(this.sysOutputFile), "utf-8"));
+
+			// Create system output file
+			this.writeSysOutput(testResult, this.sysOutput);
+
+			// Close the output files
+			this.sysOutput.close();
+		} catch (IOException e) {
+			System.err.println("Failed to write results. Check your system output filename and system setup.");
+			e.printStackTrace();
+		}
+
+		// Output confusion matrix to stdout
+		System.out.println(new ConfusionMatrix(testResult, trainOrTest));
+	}
+
+	/**
+	 * @param modelOutput
+	 * @throws IOException
+	 */
+	public void writeModelFile(BufferedWriter modelOutput) throws IOException {
+		if (modelOutput == null) {
+			throw new NullPointerException();
+		}
+		if (this.rules == null) {
+			System.err.println("writeModelFile called before training completed;");
+			System.exit(-1);
+		}
+		Integer counter = 1;
+		for (Rule rule: this.rules) {
+			modelOutput.write(String.format("%s %s %s", rule.toString(), rule.getDocCount(), rule.getFormattedProbabilities()));
+			if (counter < this.rules.size()) {
+				modelOutput.write(String.format("%n"));
+			}
+		}
+
+	}
+
+	/**
+	 * @param testResult
+	 * @param sysOutput
+	 * @throws IOException
+	 */
+	public void writeSysOutput(Data testResult, BufferedWriter sysOutput) throws IOException {
+		if (testResult == null || sysOutput == null) {
+			throw new NullPointerException();
+		}
+		// instanceID true_label class1 prob1 class2 prob2 ...
+		Integer counter = 1;
+		for (Integer docID: testResult.getIDs()) {
+			sysOutput.write(String.format("Document:%s %s", docID, testResult.getDoc(docID).getLabel()));
+			// Print out labels by sorted probabilities
+			for (String label: testResult.getAllLabels()) {
+				sysOutput.write(String.format(" %s %f", label, testResult.getDoc(docID).getLabelProb(label)));
+			}
+			if (counter < testResult.getIDs().size()) {
+				sysOutput.write(String.format("%n"));
+			}
+			counter++;
+		}
+	}
+
+	/**
+	 * Returns this Classifier object's Data object <br>
+	 * For testing.
+	 *
+	 * @return this Classifier object's Data object
+	 */
+	Data getData() {
+		return this.trainingData;
+	}
+
+	/**
+	 * Returns this Classifier object's Tree object <br>
+	 * For testing.
+	 *
+	 * @return this Classifier object's Tree object
+	 */
+	Tree getTree() {
+		return this.tree;
+	}
+
+	/**
+	 * Returns this Classifier object's list of Rule objects <br>
+	 * For testing.
+	 *
+	 * @return this Classifier object's list of Rule objects
+	 */
+	ArrayList<Rule> getRules() {
+		return this.rules;
+	}
+
+	Double getMinGain() {
+		return this.minGain;
+	}
+
+}
+
+/**
+ * Runnable helper for multi-threaded DecisionTreeClassifier
+ *
+ * @author T.J. Trimble
+ */
+class DecisionTreeClassifierHelper implements Runnable {
+
+	Thread thread;
+
+	private Integer depth;
+	private DecisionTree currentTree;
+
+	private boolean isFinished = false;
+
+	private static Integer maxDepth;
+	private static DecisionTreeClassifier classifier;
+
+	DecisionTreeClassifierHelper(DecisionTree tree, Integer maxDepth, DecisionTreeClassifier classifier) {
+		this(tree);
+		DecisionTreeClassifierHelper.setMaxDepth(maxDepth);
+		DecisionTreeClassifierHelper.classifier = classifier;
+	}
+
+	private DecisionTreeClassifierHelper(DecisionTree tree) {
+		if (tree == null) {
+			throw new NullPointerException();
+		}
+		this.currentTree = tree;
+		this.depth = tree.getDepth();
+
+		this.thread = new Thread(this, tree.getFeature());
+		this.thread.start();
+	}
+
+	/**
+	 * DecisionTreeClassifierHelper#run() spawns threads running
+	 * calculateTree() to build a Decision Tree in a multi-threaded
+	 * fashion
+	 *
+	 * @see java.lang.Runnable#run()
+	 */
+	@Override
+	public void run() {
+		this.calculateTree();
+	}
+
+	/**
+	 * calculateTree() splits the data of the current tree into two sets,
+	 * where one set has a given feature and the other does not. The
+	 * feature is chosen as the feature that splits the data into the
+	 * two sets with returning the highest information gain.
+	 *
+	 */
+	void calculateTree() {
+		if (DecisionTreeClassifierHelper.maxDepth == null) {
+			System.err.println("The maximum depth of the classifier must be set before calling Train();");
+		}
+		if (this.depth == DecisionTreeClassifierHelper.maxDepth) {
+			return;
+		}
+		//// Initializations
+		// Members for storing bests
+		Double bestGain = 0.0d;
+		String bestFeature = "";
+		String notFeature = "";
+		Double bestWithEnt = 0.0d;
+		Double bestWithOutEnt = 0.0d;
+		ArrayList<Integer> bestDocumentsWithFeature = null;
+		ArrayList<Integer> bestDocumentsWithOutFeature = null;
+		// Method members
+		ArrayList<Integer> documentsWithFeature;
+		ArrayList<Integer> documentsWithOutFeature;
+		Double withEnt;
+		Double withOutEnt;
+		Double topEnt;
+		Double gain;
+
+		// Get all features
+		HashSet<String> features = new HashSet<String>();
+		for (Integer id: this.currentTree.getDocIDs()) {
+			features.addAll(this.currentTree.getData().getFeatures(id));
+		}
+		// Loop through each feature to find highest information gain
+		for (String feature: features) {
+			// Split documents based on feature
+			documentsWithFeature = new ArrayList<Integer>();
+			documentsWithOutFeature = new ArrayList<Integer>();
+			for (Integer id: this.currentTree.getDocIDs()) {
+				if (this.currentTree.getData().getDoc(id).contains(feature)) {
+					documentsWithFeature.add(id);
+				}
+				else {
+					documentsWithOutFeature.add(id);
+				}
+			}
+
+			// Calculate entropy and information gain
+			withEnt = this.currentTree.getData().getEntropy(documentsWithFeature);
+			withOutEnt = this.currentTree.getData().getEntropy(documentsWithOutFeature);
+			topEnt = this.currentTree.getEntropy();
+			gain = informationGain(withEnt, documentsWithFeature.size(), withOutEnt, documentsWithOutFeature.size(), topEnt);
+
+			// Store values for best information gain
+			if (gain > bestGain) {
+				bestGain = gain;
+				bestFeature = feature;
+				bestDocumentsWithFeature = documentsWithFeature;
+				bestDocumentsWithOutFeature = documentsWithOutFeature;
+				bestWithEnt = withEnt;
+				bestWithOutEnt = withOutEnt;
+			}
+		}
+		// Check if minimum gain achieved
+		if (bestGain < DecisionTreeClassifierHelper.classifier.getMinGain()) {
+			return;
+		}
+		// Create new children
+		int nextDepth = this.currentTree.getDepth()+1;
+		DecisionTree withTree = new DecisionTree(bestFeature, bestDocumentsWithFeature, bestWithEnt, nextDepth, this.currentTree.getData());
+		DecisionTree withOutTree = new DecisionTree(notFeature, bestDocumentsWithOutFeature, bestWithOutEnt, nextDepth, this.currentTree.getData());
+		this.currentTree.addChild(withTree);
+		this.currentTree.addChild(withOutTree);
+		// Start the new thread for each child
+		DecisionTreeClassifierHelper withChild = new DecisionTreeClassifierHelper(withTree);
+		DecisionTreeClassifierHelper withOutChild = new DecisionTreeClassifierHelper(withOutTree);
+		// Join children methods
+		try {
+			withChild.thread.join();
+			withOutChild.thread.join();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		this.isFinished = true;
+	}
+
+	// Getter
+
+	public DecisionTree getTree() {
+		if (this.isFinished == false) {
+			throw new ConcurrentModificationException("Trying to access tree with getTree() before it is completed!");
+		}
+		return this.currentTree;
+	}
+
+	// Setter
+
+	public static void setMaxDepth(Integer maxDepth) {
+		DecisionTreeClassifierHelper.maxDepth = maxDepth;
+	}
+}
+
+/**
+ * DecisionTree
+ *
+ * Extends machineLearningTools.Tree to store current entropy
+ *
+ * @author T.J. Trimble
+ */
+class DecisionTree extends Tree {
+
+	private Double entropy;
+
+	/**
+	 * Set up public constructor for *TOP* node.
+	 *
+	 * @param trainingData
+	 * @author T.J. Trimble
+	 */
+	public DecisionTree(Data trainingData) {
+		super(trainingData);
+	}
+
+	/**
+	 * Construct a new DecisionTree object, passing the given parameters
+	 * (except for entropy) through to the Tree constructor.
+	 *
+	 * @param feature
+	 * @param docIDs
+	 * @param entropy
+	 * @param depth
+	 * @param data
+	 * @author T.J. Trimble
+	 */
+	DecisionTree(String feature, Collection<Integer> docIDs, Double entropy, int depth, Data data) {
+		super(feature, docIDs, depth, data);
+		this.entropy = entropy;
+	}
+
+	/**
+	 * Set the entropy member of the *TOP* node.
+	 *
+	 * @param entropy
+	 * @throws IllegalArgumentException if called on a non-*TOP* Tree object
+	 */
+	void setEntropy(Double entropy) {
+		if (this.getParent() == null) {
+			this.entropy = entropy;
+		}
+		else {
+			throw new IllegalArgumentException("setEntropy() is for use with the *TOP* node only!");
+		}
+	}
+
+	Double getEntropy() {
+		return this.entropy;
+	}
+
+	@Override
+	public DecisionTree getParent() {
+		return (DecisionTree)super.getParent();
+	}
+
+}

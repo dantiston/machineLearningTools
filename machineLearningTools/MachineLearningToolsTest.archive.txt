@@ -1,0 +1,222 @@
+
+/* *********************************
+*  MachineLearningTools.java ARCHIVE
+/* *********************************/
+//		public String featuresToString() {
+//			this.stringBuilder = new StringBuilder();
+//			String valueString;
+//			// Assemble string from features
+//			this.stringBuilder.append("{");
+//			// Assumes data keys start from 0... is this bad?
+//			for (int i=0; i<this.data.keySet().size(); i++) {
+//				valueString = this.data.get(i).words.toString();
+//				this.stringBuilder.append(String.format("%s=%s", i, valueString));
+//				if (i != this.data.keySet().size()-1) {
+//					this.stringBuilder.append(", ");
+//				}
+//			}
+//			this.stringBuilder.append("}");
+//			// Return
+//			return this.stringBuilder.toString();
+//		}
+//
+//		public String labelsToString() {
+//			this.stringBuilder = new StringBuilder();
+//			String valueString;
+//			// Assemble string from features
+//			this.stringBuilder.append("{");
+//			// Assumes data keys start from 0... is this bad?
+//			for (int i=0; i<this.data.keySet().size(); i++) {
+//				valueString = this.data.get(i).label;
+//				this.stringBuilder.append(String.format("%s=%s", i, valueString));
+//				if (i != this.data.keySet().size()-1) {
+//					this.stringBuilder.append(", ");
+//				}
+//			}
+//			this.stringBuilder.append("}");
+//			// Return
+//			return this.stringBuilder.toString();
+//		}
+
+
+******************************************************
+******************************************************
+
+
+//			if ((obj.getClass() != this.getClass()) ||
+//				(this.hashCode() != obj.hashCode())) {
+//				return false;
+//			}
+//			Data other = null;
+//			try {
+//				other = (Data)obj;
+//			}
+//			catch (ClassCastException e) {
+//				return false;
+//			}
+////			if (obj instanceof Data) {
+////				other = (Data) obj;
+////			}
+////			else {
+////				// THIS IS TRIGGERING!
+////				return false;
+////			}
+//			// Compare all labels
+//			if (this.allLabels.size() != other.getAllLabels().size()) {
+//				return false;
+//			}
+//			HashSet<String> labelIntersection = new HashSet<String>(this.allLabels);
+//			labelIntersection.removeAll(other.getAllLabels());
+//			if (labelIntersection.size() > 0) {
+//				return false;
+//			}
+//			// Compare number of documents
+//			if (this.size() != other.size()) {
+//				return false;
+//			}
+//			// Compare document ID sets
+//			// TODO: This might not work..
+//			HashSet<Integer> keyIntersection = new HashSet<Integer>(this.data.keySet());
+//			keyIntersection.removeAll(other.getIDs());
+//			if (keyIntersection.size() > 0) {
+//				return false;
+//			}
+//			// Compare each document
+////			if (this.data.toString() != other.getData().toString()) {
+////				return false;
+////			}
+//			for (Document doc: this.data.values()) {
+////				if ((!other.getIDs().contains(docID)) ||
+////					this.data.get(docID) != other.getDoc(docID)) {
+////					return false;
+////				}
+////				if (!other.getIDs().contains(docID)) {
+////					System.out.println("Other doesn't contain doc ID");
+////				}
+////				if (this.data.get(docID) != other.getDoc(docID)) {
+////					System.out.println("Documents not equal");
+////				}
+//				if (doc != other.getDoc(doc.getDocID())) {
+//					return false;
+//				}
+//			}
+//			return true;
+	
+/* *************************************
+*  MachineLearningToolsTest.java ARCHIVE
+/* *************************************/
+	try {
+			systemFeatures = this.goldData;
+			systemLabels = this.goldData;
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+		// Get gold results
+		HashSet<Integer> systemKeys = new HashSet<Integer>();
+		HashMap<Integer, ArrayList<String>> systemFeaturesMap = new HashMap<Integer, ArrayList<String>>();
+		HashMap<Integer, String> systemLabelsMap = new HashMap<Integer, String>();
+		ArrayList<String> value = new ArrayList<String>();
+		String key;
+		String label;
+		Integer keyInt;
+		JSONArray jsonArray;
+		for (int i=0; i<systemFeatures.length(); i++) {
+			try {
+				// Convert key to integer
+				key = systemFeatures.names().getString(i);
+				keyInt = Integer.parseInt(key);
+				// Convert JSON Array to ArrayList
+				jsonArray = systemFeatures.getJSONArray(key);
+				for (int j=0; i<jsonArray.length(); i++) {
+					value.add((String) jsonArray.get(j));
+				}
+				// Get label
+				label = systemLabels.names().getString(i);
+				// Keep track of each
+				systemKeys.add(keyInt);
+				systemFeaturesMap.put(keyInt, value);
+				systemLabelsMap.put(keyInt, label);
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+		}
+		// Make sure system documents match gold
+		HashSet<Integer> goldKeys = new HashSet<Integer>(this.goldData.getIDs());
+		goldKeys.removeAll(systemKeys);
+		assertThat(goldKeys.size(), is(0));
+		// Make sure system features match gold
+		
+
+		// Make sure system labels match gold
+
+
+******************************************************
+******************************************************
+
+		// Make sure file loaded
+//		assertTrue((this.goldFeatures != null));
+//		assertTrue((this.goldLabels != null));
+		// Load files
+//		this.goldData = new Data(this.testVectorFile);
+		/*
+		 * TODO:
+		 * store GOLD as JSON objects with "DocID":{"label":"XYZ", "features":{"XYZ":"1","ABC":"1"}}
+		 * load GOLD JSON objects as a Data object
+		 * Compare SYSTEM Data object to GOLD Data object
+		 *     Write Document and Data class comparators
+		 */
+
+		// TODO: DELETEME
+//		JSONTokener jsonToWrite = new JSONTokener(this.goldData.toString());
+//		JSONWriter writer = null;
+//		try {
+//			writer = new JSONWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream("example.vectors.json"), "utf-8")));
+//		} catch (UnsupportedEncodingException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		} catch (FileNotFoundException e) {
+//			e.printStackTrace();
+//		}
+//		try {
+//			writer.object().value(jsonToWrite).endObject();
+//		} catch (JSONException e) {
+//			e.printStackTrace();
+//		}
+//	}
+
+******************************************************
+******************************************************
+
+		// Load gold labels
+//		goldFile = this.testVectorLabelsJsonFile;
+//		try {
+//			jsonReader = new BufferedReader(new FileReader(goldFile));
+//			jsonTokener = new JSONTokener(jsonReader);
+//			if (jsonTokener.more()) {
+//				this.goldLabels = (JSONObject) jsonTokener.nextValue();
+//			}
+//			jsonReader.close();
+//		} catch (IOException e) {
+//			System.err.append(String.format("File \"%s\" not found!%n", goldFile));
+//		}
+
+		// TEST WRITING
+//		BufferedWriter writer;
+//		JSONWriter testWriter;
+//		JSONObject testTokener;
+//		try {
+//			writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(this.testVectorLabelsJsonFile), "utf-8"));
+//			testTokener = new JSONObject(this.goldData.labelsToString());
+//			System.out.println(testTokener.toString());
+//			writer.close();
+//		} catch (UnsupportedEncodingException e) {
+//			e.printStackTrace();
+//			System.exit(1);
+//		} catch (FileNotFoundException e) {
+//			e.printStackTrace();
+//			System.exit(1);
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//			System.exit(1);
+//		}
+		
