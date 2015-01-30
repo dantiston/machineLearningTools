@@ -41,6 +41,7 @@ public class Data {
 
 	/**
 	 * Load data from a file and construct a Data object
+	 *
 	 * @param trainingDataFileName
 	 */
 	public Data(final String trainingDataFileName) {
@@ -52,6 +53,7 @@ public class Data {
 
 	/**
 	 * Load data from a JSONObject and construct a Data object
+	 *
 	 * @param trainingDataJSON
 	 */
 	public Data(final JSONObject trainingDataJSON) {
@@ -59,6 +61,17 @@ public class Data {
 			throw new NullPointerException();
 		}
 		this.data = this.readDataFromJSON(trainingDataJSON);
+	}
+
+	/**
+	 * Create an empty Data object.
+	 *
+	 * For testing.
+	 *
+	 * @author T.J. Trimble
+	 */
+	Data() {
+		this.data = new HashMap<Integer, Document>(0);
 	}
 
 	/**

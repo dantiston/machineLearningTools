@@ -2,9 +2,9 @@ package machineLearningTools;
 
 import static machineLearningTools.Testing.testFile;
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -159,7 +159,8 @@ public class ConfusionMatrixTest {
 
 	@Test
 	public void testConfusionMatrixToStringEmpty() {
-		fail("need to implement; have to create an empty Data object");
+		ConfusionMatrix emptyMatrix = new ConfusionMatrix(new Data(), "empty");
+		assertEquals(emptyMatrix.toString(), "Confusion Matrix for empty not utilized.");
 	}
 
 }

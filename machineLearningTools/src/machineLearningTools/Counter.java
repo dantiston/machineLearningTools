@@ -16,12 +16,14 @@ import java.util.Set;
  *
  ** *********************************************************/
 public class Counter<T> extends AbstractCounter<T> {
-	private HashMap<T, Integer> values = new HashMap<T, Integer>();
+	private HashMap<T, Integer> values;
 
 	/**
 	 * Basic constructor to instantiate empty Counter object
 	 */
-	public Counter() {}
+	public Counter() {
+		this.values = new HashMap<T, Integer>();
+	}
 
 	/**
 	 * Constructor for Counter with values filled in with contents
@@ -33,6 +35,7 @@ public class Counter<T> extends AbstractCounter<T> {
 		if (data == null) {
 			throw new NullPointerException();
 		}
+		this.values = new HashMap<T, Integer>(data.size());
 		Iterator<T> it = data.iterator();
 		while (it.hasNext()) {
 			this.increment(it.next());
@@ -49,6 +52,7 @@ public class Counter<T> extends AbstractCounter<T> {
 		if (data == null) {
 			throw new NullPointerException();
 		}
+		this.values = new HashMap<T, Integer>(data.length);
 		for (T element: data) {
 			this.increment(element);
 		}

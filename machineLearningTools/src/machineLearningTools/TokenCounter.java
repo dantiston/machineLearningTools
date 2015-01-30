@@ -1,5 +1,6 @@
 package machineLearningTools;
 
+
 /**
  * TokenCounter <br><br>
  *
@@ -13,6 +14,11 @@ package machineLearningTools;
  */
 public class TokenCounter extends Counter<String> {
 
+	/**
+	 *
+	 * @param data
+	 * @author T.J. Trimble
+	 */
 	public TokenCounter(String data) {
 		if (data == null) {
 			throw new NullPointerException();
@@ -26,5 +32,4 @@ public class TokenCounter extends Counter<String> {
 			}
 		}
 	}
-
 }

@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -28,6 +29,7 @@ import org.json.JSONObject;
  * @author T.J. Trimble
  */
 public class Document implements Comparable<Document> {
+
 	// Core Members
 	private final int docID;
 	private final String label;
@@ -41,6 +43,7 @@ public class Document implements Comparable<Document> {
 
 	// Class Members
 	static int docCount;
+	private static String unstructuredError = "To process unstructured data, pass in the boolean unstructured flag.";
 
 	/**
 	 * Constructor for processing unstructured data. String is split
@@ -76,27 +79,30 @@ public class Document implements Comparable<Document> {
 			throw new NullPointerException();
 		}
 		// Initializations
+		int count;
+		String word;
 		String[] valuePart;
 		this.docID = Document.docCount++;
-		this.wordCounts = new HashMap<String, Integer>();
 		// Split and process data
 		String[] parts = data.split("\\s+");
 		this.label = parts[0];
+		this.wordCounts = new HashMap<String, Integer>(parts.length-1);
 		for (String value: Arrays.copyOfRange(parts, 1, parts.length)) {
 			valuePart = value.split("[:]", 2);
 			// Check if valuePart is correct length
 			if (valuePart.length != 2) {
-				throw new IllegalArgumentException(String.format("Value %s in Document constructor is not properly formatted. Missing \":\" denoting count. To process unstructured data, pass in the boolean unstructured flag. %s = %s", value, join(parts, ","), join(valuePart, ",")));
+				throw new IllegalArgumentException(String.format("Value %s in Document constructor is not properly formatted. Missing \":\" denoting count. %s %s = %s", value, Document.unstructuredError, join(parts, ","), join(valuePart, ",")));
 			}
-			String word = valuePart[0];
-			int count;
+			word = valuePart[0];
+			count = 0;
+			if (this.wordCounts.containsKey(word)) {
+				throw new IllegalArgumentException(String.format("Vector %s contains a non-unique word->count pairing. %s", data, Document.unstructuredError));
+			}
 			try {
 				count = Integer.parseInt(valuePart[1]);
 			} catch (NumberFormatException e) {
 				throw new NumberFormatException(String.format("Value %s in Document constructor failed to generate an integer representation.", value));
 			}
-			// For now, assume data file is well formed
-			// with unique pairings
 			this.wordCounts.put(word, count);
 		}
 	}
@@ -231,6 +237,29 @@ public class Document implements Comparable<Document> {
 	}
 
 	/**
+	 * Set the System Output label for the document object. <br>
+	 * This document's label is calculated by taking the most common
+	 * label in the given topK list.
+	 *
+	 * @param topK
+	 */
+	public void setSysOutput(List<Document> topK) {
+		final HashMap<String, Double> probabilities = new HashMap<String, Double>();
+		final Double toAdd = 1.0d/topK.size();
+		Double probability;
+		// Calculate the probability of each label
+		for (Document document: topK) {
+			try {
+				probability = probabilities.get(document.getLabel())+toAdd;
+			} catch (NullPointerException e) {
+				probability = toAdd;
+			}
+			probabilities.put(document.getLabel(), probability);
+		}
+		this.setSysOutput(probabilities);
+	}
+
+	/**
 	 * Return true iff this document contains a given word/feature
 	 * @param word
 	 * @return
@@ -309,6 +338,12 @@ public class Document implements Comparable<Document> {
 		return Document.docCount;
 	}
 
+	/**
+	 *
+	 *
+	 * @param systemLabel
+	 * @return
+	 */
 	public Double getLabelProb(final String systemLabel) {
 		if (this.labelProbs == null) {
 			System.err.println("Trying to access label probabilities with getLabelProb() before setting system output");
@@ -324,11 +359,24 @@ public class Document implements Comparable<Document> {
 		return 0.0d;
 	}
 
+	/**
+	 * Returns the count of a given feature iff it is present in
+	 * this document, else returns 0
+	 *
+	 * @param feature
+	 * @return
+	 */
 	public int getFeatCount(final String feature) {
 		if (feature == null) {
 			throw new NullPointerException("feature parameter is null at Document#getFeatCount(systemLabel)");
 		}
-		int result = this.wordCounts.get(feature);
+		int result;
+		try {
+			result = this.wordCounts.get(feature);
+		}
+		catch (NullPointerException e) {
+			result = 0;
+		}
 		return result;
 	}
 
@@ -473,7 +521,7 @@ public class Document implements Comparable<Document> {
 	public String getFormattedSystemOutput(boolean convertLogProbabilities) {
 		// Sort classes by probabilities
 		// Return sorted classes
-		StringBuilder stringBuilder = new StringBuilder();
+		StringBuilder stringBuilder = new StringBuilder(this.labelProbs.size()+1);
 		stringBuilder.append(String.format("Document:%s %s", this.docID, this.label));
 		Map<String, Double> probabilities = new HashMap<String, Double>(this.labelProbs);
 		// Convert log probs

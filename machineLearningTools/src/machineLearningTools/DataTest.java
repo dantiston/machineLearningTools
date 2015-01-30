@@ -187,9 +187,16 @@ public class DataTest {
 //	}
 
 	/**
-	 * Rule for testDataConstructorNullThrowsException()
-	 * @see testDataConstructorNullThrowsException()
+	 * This test relies on readDataFromJSON()
+	 * and readDataFromFile()
 	 */
+	@Test
+	public void testDataConstructorEmpty() {
+		Data emptyData = new Data();
+		assertEquals(emptyData.size(), 0);
+	}
+
+	// Setup Rule
 	@org.junit.Rule
 	public ExpectedException exception = ExpectedException.none();
 

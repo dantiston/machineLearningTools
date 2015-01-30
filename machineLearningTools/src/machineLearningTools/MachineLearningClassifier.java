@@ -36,17 +36,6 @@ public interface MachineLearningClassifier {
 	/**
 	 * @author T.J. Trimble <br>
 	 *
-	 * test() should take in a data filename, load the data,
-	 * classify() each data instance, and execute outputResults()
-	 *
-	 * @param testingDataFileName
-	 * @param testingLabel
-	 */
-	public void test(String testingDataFileName, String testingLabel);
-
-	/**
-	 * @author T.J. Trimble <br>
-	 *
 	 * classify() should execute the classification algorithm
 	 * based on the model created in train(). classify() takes in
 	 * a testingData object and should use setSysOutput() to
@@ -60,6 +49,17 @@ public interface MachineLearningClassifier {
 	 * @return
 	 */
 	public void classify(Data testingData);
+
+	/**
+	 * @author T.J. Trimble <br>
+	 *
+	 * test() should take in a data filename, load the data,
+	 * classify() each data instance, and execute outputResults()
+	 *
+	 * @param testingDataFileName
+	 * @param testingLabel
+	 */
+	public void test(String testingDataFileName, String testingLabel);
 
 	// Package methods
 	/**

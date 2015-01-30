@@ -29,6 +29,9 @@ public class DocumentTest {
 
 	private DataTest test = new DataTest();
 
+	@org.junit.Rule
+	public ExpectedException exception = ExpectedException.none();
+
 	/* ************************
 	 *  Document tests
 	 * ************************/
@@ -53,7 +56,7 @@ public class DocumentTest {
 	//// Gold Documents
 	Data goldData;
 	Document goldDocument;
-	private Document goldDocument2;
+	Document goldDocument2;
 	private Document goldDocument3;
 	// Binary
 	private String goldDocumentBinaryJSONString;
@@ -65,7 +68,7 @@ public class DocumentTest {
 	private String goldDocumentRealIDString;
 	private Document goldDocumentRealFromJSON;
 	//// Other documents
-	private Document otherDocument;
+	Document otherDocument;
 	private Document testDocument;
 	private Document testDocumentFromJSON;
 	private JSONObject testDocumentJSON;
@@ -304,8 +307,9 @@ public class DocumentTest {
 		assertTrue(Document.getDocCount() == 0);
 	}
 
-	// Constructor tests
+	//// Constructor tests
 
+	// Constructor from string tests
 	/**
 	 * Relies on testDocumentConstructorFromJSON()
 	 */
@@ -322,6 +326,39 @@ public class DocumentTest {
 		Document testDocument = new Document(this.testDocumentRealString);
 		assertTrue(testDocument.equals(this.testDocumentRealFromJSON));
 	}
+
+	@Test
+	public void testDocumentConstructorFromStringThrowsForNoColon() {
+		this.exception.expect(IllegalArgumentException.class);
+		this.testDocument = new Document("label feat");
+	}
+
+	@Test
+	public void testDocumentConstructorFromStringThrowsForDuplicateFeatures() {
+		this.exception.expect(IllegalArgumentException.class);
+		this.testDocument = new Document("label feat:1 feat:2");
+	}
+
+	@Test
+	public void testDocumentConstructorFromStringThrowsIllegalArgumentExceptionWithNoColon() {
+		this.exception.expect(IllegalArgumentException.class);
+		new Document("label w1 w2");
+	}
+
+	@Test
+	public void testDocumentConstructorFromStringThrowsNumberFormatExceptionWithBadNumberRepresentation() {
+		this.exception.expect(NumberFormatException.class);
+		new Document("label w1:abc w2:&^%");
+	}
+
+	@Test
+	public void testDocumentConstructorFromNullString() {
+		String nullString = null;
+		this.exception.expect(NullPointerException.class);
+		this.testDocument = new Document(nullString);
+	}
+
+	// Constructor from JSON tests
 
 	@Test
 	public void testDocumentConstructorFromJSONBinary() {
@@ -374,47 +411,6 @@ public class DocumentTest {
 	}
 
 	@Test
-	public void testDocumentConstructorFromDocument() {
-		this.setupDocument();
-		this.testDocument = new Document(this.goldDocument);
-		assertTrue(this.testDocument.equals(this.goldDocument));
-	}
-
-	@Test
-	public void testDocumentConstructorFromUnstructuredText() {
-		this.setupDocumentUnstructuredDocument();
-		this.testDocument = new Document(this.unstructuredText, true);
-		// Compare the words because this constructor
-		// does not instantiate a label
-		assertTrue(this.testDocument.getWords().equals(this.goldDocument.getWords()));
-	}
-
-	@org.junit.Rule
-	public ExpectedException exception = ExpectedException.none();
-
-	@Test
-	public void testDocumentConstructorFromNullDocument() {
-		Document nullDocument = null;
-		this.exception.expect(NullPointerException.class);
-		this.testDocument = new Document(nullDocument);
-	}
-
-	@Test
-	public void testDocumentConstructorFromNullString() {
-		this.setupDocument();
-		String nullString = null;
-		this.exception.expect(NullPointerException.class);
-		this.testDocument = new Document(nullString);
-	}
-
-	@Test
-	public void testDocumentConstructorFromNullUnstructuredText() {
-		String nullString = null;
-		this.exception.expect(NullPointerException.class);
-		this.testDocument = new Document(nullString, true);
-	}
-
-	@Test
 	public void testDocumentConstructorFromNullJSON() {
 		JSONObject nullJSON = null;
 		this.exception.expect(NullPointerException.class);
@@ -437,16 +433,38 @@ public class DocumentTest {
 		this.testDocument = new Document(nullJSON, nullKey);
 	}
 
+	// Constructor from Document tests
+
 	@Test
-	public void testDocumentConstructorThrowsIllegalArgumentExceptionWithBadFormatting() {
-		this.exception.expect(IllegalArgumentException.class);
-		new Document("label w1 w2");
+	public void testDocumentConstructorFromDocument() {
+		this.setupDocument();
+		this.testDocument = new Document(this.goldDocument);
+		assertTrue(this.testDocument.equals(this.goldDocument));
 	}
 
 	@Test
-	public void testDocumentConstructorThrowsNumberFormatExceptionWithBadNumberRepresentation() {
-		this.exception.expect(IllegalArgumentException.class);
-		new Document("label w1:abc w2:&^%");
+	public void testDocumentConstructorFromNullDocument() {
+		Document nullDocument = null;
+		this.exception.expect(NullPointerException.class);
+		this.testDocument = new Document(nullDocument);
+	}
+
+	// Constructor from Unstructured text tests
+
+	@Test
+	public void testDocumentConstructorFromUnstructuredText() {
+		this.setupDocumentUnstructuredDocument();
+		this.testDocument = new Document(this.unstructuredText, true);
+		// Compare the words because this constructor
+		// does not instantiate a label
+		assertTrue(this.testDocument.getWords().equals(this.goldDocument.getWords()));
+	}
+
+	@Test
+	public void testDocumentConstructorFromNullUnstructuredText() {
+		String nullString = null;
+		this.exception.expect(NullPointerException.class);
+		this.testDocument = new Document(nullString, true);
 	}
 
 	// Setter tests
