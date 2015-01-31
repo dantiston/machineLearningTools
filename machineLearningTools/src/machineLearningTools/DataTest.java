@@ -14,7 +14,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class DataTest {
 
@@ -196,19 +195,14 @@ public class DataTest {
 		assertEquals(emptyData.size(), 0);
 	}
 
-	// Setup Rule
-	@org.junit.Rule
-	public ExpectedException exception = ExpectedException.none();
-
 	/**
 	 * Test that Data constructor passed a null
 	 * throws a NullPointerException error
 	 */
 	@SuppressWarnings("unused")
-	@Test
+	@Test(expected=NullPointerException.class)
 	public void testDataJSONConstructorNullThrowsException() {
 		JSONObject nullJSON = null;
-		this.exception.expect(NullPointerException.class);
 		Data systemData = new Data(nullJSON);
 	}
 
@@ -217,10 +211,9 @@ public class DataTest {
 	 * throws a NullPointerException error
 	 */
 	@SuppressWarnings("unused")
-	@Test
+	@Test(expected=NullPointerException.class)
 	public void testDataStringConstructorNullThrowsException() {
 		String nullFileName = null;
-		this.exception.expect(NullPointerException.class);
 		Data systemData = new Data(nullFileName);
 	}
 

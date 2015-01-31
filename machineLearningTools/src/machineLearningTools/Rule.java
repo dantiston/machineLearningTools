@@ -71,7 +71,7 @@ public class Rule implements Comparable<Rule> {
 		if (path.size() < 1) {
 			throw new IllegalArgumentException("Path parameter must contain at least one feature;");
 		}
-		if (docCount < 0) {
+		if (docCount < 1) {
 			throw new IllegalArgumentException("DocCount parameter must be at least 0;");
 		}
 		if (probabilities.keySet().size() < 1) {

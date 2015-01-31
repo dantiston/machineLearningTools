@@ -4,12 +4,8 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class CosineSimilarityTest {
-
-	@org.junit.Rule
-	public ExpectedException exception = ExpectedException.none();
 
 	// Test values
 	private CosineSimilarity testMeasure1;
@@ -40,24 +36,21 @@ public class CosineSimilarityTest {
 		assertEquals(this.testMeasure3, this.gold3);
 	}
 
-	@Test
+	@Test(expected=NullPointerException.class)
 	public void testCosineSimilarityNullBothThrowsNull() {
 		Document nullDocument = null;
-		this.exception.expect(NullPointerException.class);
 		new EuclideanDistance(nullDocument, nullDocument);
 	}
 
-	@Test
+	@Test(expected=NullPointerException.class)
 	public void testCosineSimilarityNullFirstThrowsNull() {
 		Document nullDocument = null;
-		this.exception.expect(NullPointerException.class);
 		new EuclideanDistance(this.testDocument1, nullDocument);
 	}
 
-	@Test
+	@Test(expected=NullPointerException.class)
 	public void testCosineSimilarityNullSecondThrowsNull() {
 		Document nullDocument = null;
-		this.exception.expect(NullPointerException.class);
 		new EuclideanDistance(nullDocument, this.testDocument1);
 	}
 }

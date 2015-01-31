@@ -20,15 +20,8 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class TreeTest {
-
-	/**
-	 * Exception handler
-	 */
-	@org.junit.Rule
-	public ExpectedException exception = ExpectedException.none();
 
 	// Constants
 	private final DataTest test = new DataTest();
@@ -125,27 +118,23 @@ public class TreeTest {
 
 	// Null checks
 
-	@Test
+	@Test(expected=NullPointerException.class)
 	public void testTreeRootConstructorNullThrowsError() {
-		this.exception.expect(NullPointerException.class);
 		this.tree = new Tree(null);
 	}
 
-	@Test
+	@Test(expected=NullPointerException.class)
 	public void testTreeChildConstructorNullFeatureThrowsError() {
-		this.exception.expect(NullPointerException.class);
 		this.tree = new Tree(null, this.subsetDocIDs, 1, this.goldData);
 	}
 
-	@Test
+	@Test(expected=NullPointerException.class)
 	public void testTreeChildConstructorNullDocIDsThrowsError() {
-		this.exception.expect(NullPointerException.class);
 		this.tree = new Tree(this.testFeature, null, 1, this.goldData);
 	}
 
-	@Test
+	@Test(expected=NullPointerException.class)
 	public void testTreeChildConstructorNullDataThrowsError() {
-		this.exception.expect(NullPointerException.class);
 		this.tree = new Tree(this.testFeature, this.subsetDocIDs, 1, null);
 	}
 

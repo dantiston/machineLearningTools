@@ -19,19 +19,12 @@ import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class UtilTest {
 
 	/* ***********
 	 *  Universals
 	 * ***********/
-
-	/**
-	 * Exception handler
-	 */
-	@org.junit.Rule
-	public ExpectedException exception = ExpectedException.none();
 
 	// Constants
 	private final int goldMax = 9;
@@ -101,10 +94,9 @@ public class UtilTest {
 	/**
 	 * Test that sortedKeysByValue() throws NullPointerException
 	 */
-	@Test
+	@Test(expected=NullPointerException.class)
 	public void testSortedKeysByValueNull() {
 		Map<String, Integer> nullMap = null;
-		this.exception.expect(NullPointerException.class);
 		sortedKeysByValue(nullMap);
 	}
 
@@ -204,9 +196,8 @@ public class UtilTest {
 	/**
 	 * Test that maxKeyByValue() throws NullPointerException
 	 */
-	@Test
+	@Test(expected=NullPointerException.class)
 	public void testMaxKeyByValueNull() {
-		this.exception.expect(NullPointerException.class);
 		maxKeyByValue(null);
 	}
 
@@ -260,9 +251,8 @@ public class UtilTest {
 	/**
 	 * Test that minKeyByValue() throws NullPointerException
 	 */
-	@Test
+	@Test(expected=NullPointerException.class)
 	public void testMinKeyByValueNull() {
-		this.exception.expect(NullPointerException.class);
 		minKeyByValue(null);
 	}
 
@@ -371,17 +361,15 @@ public class UtilTest {
 		assertTrue(join(this.goldJoinInputList.subList(0, 0), this.goldJoinSeparator).equals(this.goldJoinResult0));
 	}
 
-	@Test
+	@Test(expected=NullPointerException.class)
 	public void testJoinWithSeparatorNullValuesThrowsNull() {
 		ArrayList<String> nullList = null;
-		this.exception.expect(NullPointerException.class);
 		join(nullList, this.goldJoinSeparator);
 	}
 
-	@Test
+	@Test(expected=NullPointerException.class)
 	public void testJoinWithNullSeparatorThrowsNull() {
 		String nullString = null;
-		this.exception.expect(NullPointerException.class);
 		join(this.goldJoinInputList, nullString);
 	}
 
@@ -407,10 +395,9 @@ public class UtilTest {
 		assertTrue(join(this.goldJoinInputList.subList(0, 0)).equals(this.goldJoinResult0));
 	}
 
-	@Test
+	@Test(expected=NullPointerException.class)
 	public void testJoinWithOutSeparatorNullValuesThrowsNull() {
 		ArrayList<String> nullList = null;
-		this.exception.expect(NullPointerException.class);
 		join(nullList);
 	}
 

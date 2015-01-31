@@ -23,14 +23,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class DocumentTest {
 
 	private DataTest test = new DataTest();
-
-	@org.junit.Rule
-	public ExpectedException exception = ExpectedException.none();
 
 	/* ************************
 	 *  Document tests
@@ -327,34 +323,29 @@ public class DocumentTest {
 		assertTrue(testDocument.equals(this.testDocumentRealFromJSON));
 	}
 
-	@Test
+	@Test(expected=IllegalArgumentException.class)
 	public void testDocumentConstructorFromStringThrowsForNoColon() {
-		this.exception.expect(IllegalArgumentException.class);
 		this.testDocument = new Document("label feat");
 	}
 
-	@Test
+	@Test(expected=IllegalArgumentException.class)
 	public void testDocumentConstructorFromStringThrowsForDuplicateFeatures() {
-		this.exception.expect(IllegalArgumentException.class);
 		this.testDocument = new Document("label feat:1 feat:2");
 	}
 
-	@Test
+	@Test(expected=IllegalArgumentException.class)
 	public void testDocumentConstructorFromStringThrowsIllegalArgumentExceptionWithNoColon() {
-		this.exception.expect(IllegalArgumentException.class);
 		new Document("label w1 w2");
 	}
 
-	@Test
+	@Test(expected=NumberFormatException.class)
 	public void testDocumentConstructorFromStringThrowsNumberFormatExceptionWithBadNumberRepresentation() {
-		this.exception.expect(NumberFormatException.class);
 		new Document("label w1:abc w2:&^%");
 	}
 
-	@Test
+	@Test(expected=NullPointerException.class)
 	public void testDocumentConstructorFromNullString() {
 		String nullString = null;
-		this.exception.expect(NullPointerException.class);
 		this.testDocument = new Document(nullString);
 	}
 
@@ -382,54 +373,49 @@ public class DocumentTest {
 		}
 	}
 
-	@Test
+	@Test(expected=IllegalArgumentException.class)
 	public void testDocumentConstructorFromJSONMissingFeaturesThrowsException() {
 		this.setupDocument();
 		try {
 			this.jsonTokener = new JSONTokener("{\"8\":{\"label\":\"talk.politics.misc\"}}");
 			JSONObject testJSON;
 			testJSON = (JSONObject) this.jsonTokener.nextValue();
-			this.exception.expect(IllegalArgumentException.class);
 			new Document(testJSON.getJSONObject(this.goldDocumentRealIDString), this.goldDocumentRealIDString);
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
 	}
 
-	@Test
+	@Test(expected=IllegalArgumentException.class)
 	public void testDocumentConstructorFromJSONMissingLabelThrowsException() {
 		this.setupDocument();
 		try {
 			this.jsonTokener = new JSONTokener("{\"8\":{\"features\":{\"com\":\"5\",\"your\":\"4\",\"cheaper\":\"1\"}}}");
 			JSONObject testJSON;
 			testJSON = (JSONObject) this.jsonTokener.nextValue();
-			this.exception.expect(IllegalArgumentException.class);
 			new Document(testJSON.getJSONObject(this.goldDocumentRealIDString), this.goldDocumentRealIDString);
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
 	}
 
-	@Test
+	@Test(expected=NullPointerException.class)
 	public void testDocumentConstructorFromNullJSON() {
 		JSONObject nullJSON = null;
-		this.exception.expect(NullPointerException.class);
 		this.testDocument = new Document(nullJSON, "key1");
 	}
 
-	@Test
+	@Test(expected=NullPointerException.class)
 	public void testDocumentConstructorFromNullJSONKey() {
 		this.setupDocument();
 		String nullKey = null;
-		this.exception.expect(NullPointerException.class);
 		this.testDocument = new Document(this.goldDocumentBinaryJSON, nullKey);
 	}
 
-	@Test
+	@Test(expected=NullPointerException.class)
 	public void testDocumentConstructorFromNullJSONBoth() {
 		JSONObject nullJSON = null;
 		String nullKey = null;
-		this.exception.expect(NullPointerException.class);
 		this.testDocument = new Document(nullJSON, nullKey);
 	}
 
@@ -442,10 +428,9 @@ public class DocumentTest {
 		assertTrue(this.testDocument.equals(this.goldDocument));
 	}
 
-	@Test
+	@Test(expected=NullPointerException.class)
 	public void testDocumentConstructorFromNullDocument() {
 		Document nullDocument = null;
-		this.exception.expect(NullPointerException.class);
 		this.testDocument = new Document(nullDocument);
 	}
 
@@ -460,10 +445,9 @@ public class DocumentTest {
 		assertTrue(this.testDocument.getWords().equals(this.goldDocument.getWords()));
 	}
 
-	@Test
+	@Test(expected=NullPointerException.class)
 	public void testDocumentConstructorFromNullUnstructuredText() {
 		String nullString = null;
-		this.exception.expect(NullPointerException.class);
 		this.testDocument = new Document(nullString, true);
 	}
 
@@ -481,18 +465,16 @@ public class DocumentTest {
 		assertThat(this.testDocumentFromJSON.getSysOutput(), is(maxKeyByValue(this.testDocumentProbabilities)));
 	}
 
-	@Test
+	@Test(expected=NullPointerException.class)
 	public void testSetSysOutputNullThrowsNullPointerException() {
 		this.setupDocument();
 		HashMap<String, Double> nullMap = null;
-		this.exception.expect(NullPointerException.class);
 		this.goldDocument.setSysOutput(nullMap);
 	}
 
-	@Test
+	@Test(expected=IllegalArgumentException.class)
 	public void testSetSysOutputEmptyProbabilitiesThrowsIllegalArgumentException() {
 		this.setupDocument();
-		this.exception.expect(IllegalArgumentException.class);
 		this.goldDocument.setSysOutput(new HashMap<String, Double>());
 	}
 

@@ -15,6 +15,8 @@ import java.util.HashSet;
  */
 public class EuclideanDistance extends DistanceMetric {
 
+	private static NestedDictionary<Integer, Double> documentValues = new NestedDictionary<Integer, Double>();
+
 	public EuclideanDistance(Document documentToClassify, Document documentToCompare) {
 		super(documentToClassify, documentToCompare);
 		if (documentToClassify == null || documentToCompare == null) {

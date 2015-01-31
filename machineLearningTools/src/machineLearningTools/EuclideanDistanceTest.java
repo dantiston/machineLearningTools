@@ -4,12 +4,8 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class EuclideanDistanceTest {
-
-	@org.junit.Rule
-	public ExpectedException exception = ExpectedException.none();
 
 	// Test values
 	private EuclideanDistance testMeasure1;
@@ -40,24 +36,21 @@ public class EuclideanDistanceTest {
 		assertEquals(this.testMeasure3, this.gold3);
 	}
 
-	@Test
+	@Test(expected=NullPointerException.class)
 	public void testEuclideanDistanceNullBothThrowsNull() {
 		Document nullDocument = null;
-		this.exception.expect(NullPointerException.class);
 		new EuclideanDistance(nullDocument, nullDocument);
 	}
 
-	@Test
+	@Test(expected=NullPointerException.class)
 	public void testEuclideanDistanceNullFirstThrowsNull() {
 		Document nullDocument = null;
-		this.exception.expect(NullPointerException.class);
 		new EuclideanDistance(this.testDocument1, nullDocument);
 	}
 
-	@Test
+	@Test(expected=NullPointerException.class)
 	public void testEuclideanDistanceNullSecondThrowsNull() {
 		Document nullDocument = null;
-		this.exception.expect(NullPointerException.class);
 		new EuclideanDistance(nullDocument, this.testDocument1);
 	}
 }

@@ -6,15 +6,8 @@ import java.util.HashMap;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class TokenCounterTest {
-
-	/**
-	 * Exception handler
-	 */
-	@org.junit.Rule
-	public ExpectedException exception = ExpectedException.none();
 
 	// Constants
 	private final String testString = "I like to go to the store. I like to go to the store. I like to go to the store.";
@@ -48,10 +41,9 @@ public class TokenCounterTest {
 		assertTrue(testCounter.equals(this.goldMap));
 	}
 
-	@Test
+	@Test(expected=NullPointerException.class)
 	public void testTokenCounterConstructorNull() {
 		String testString = null;
-		this.exception.expect(NullPointerException.class);
 		@SuppressWarnings("unused")
 		TokenCounter counter = new TokenCounter(testString);
 	}

@@ -13,7 +13,6 @@ import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 /**
  * @author T.J. Trimble
@@ -21,11 +20,6 @@ import org.junit.rules.ExpectedException;
  */
 public class CounterTest {
 
-	/**
-	 * Set up expected exception
-	 */
-	@org.junit.Rule
-	public ExpectedException exception = ExpectedException.none();
 
 	/* ************************
 	 *  Counter tests
@@ -80,10 +74,9 @@ public class CounterTest {
 	 * Test that Collection Counter constructor passed a null
 	 * throws a NullPointerException error
 	 */
-	@Test
+	@Test(expected=NullPointerException.class)
 	public void testCounterConstructorWithCollectionNullThrowsError() {
 		Collection<String> collection = null;
-		this.exception.expect(NullPointerException.class);
 		this.counter = new Counter<String>(collection);
 	}
 
@@ -108,10 +101,9 @@ public class CounterTest {
 		assertTrue(this.counter.keySet().equals(hashSet));
 	}
 
-	@Test
+	@Test(expected=NullPointerException.class)
 	public void testCounterConstructorWithArrayNullThrowsError() {
 		String[] collection = null;
-		this.exception.expect(NullPointerException.class);
 		this.counter = new Counter<String>(collection);
 	}
 

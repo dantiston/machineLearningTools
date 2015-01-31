@@ -11,18 +11,11 @@ import java.io.FileReader;
 import java.io.IOException;
 
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class ConfusionMatrixTest {
 
 	MachineLearningToolsTest test = new MachineLearningToolsTest();
 	DataTest dataTest = new DataTest();
-
-	/**
-	 * Exception handler
-	 */
-	@org.junit.Rule
-	public ExpectedException exception = ExpectedException.none();
 
 	/* ************************
 	 *  ConfusionMatrix tests
@@ -79,29 +72,26 @@ public class ConfusionMatrixTest {
 		assertThat(this.confusionMatrix.getLabel(), is(this.test.testName));
 	}
 
-	@Test
+	@Test(expected=NullPointerException.class)
 	public void testConfusionMatrixConstructorNullBothThrowsException() {
 		@SuppressWarnings("unused")
 		ConfusionMatrix confusionMatrix;
 		this.setupConfusionMatrixData();
-		this.exception.expect(NullPointerException.class);
 		confusionMatrix = new ConfusionMatrix(null, null);
 	}
 
-	@Test
+	@Test(expected=NullPointerException.class)
 	public void testConfusionMatrixConstructorNullDataThrowsException() {
 		@SuppressWarnings("unused")
 		ConfusionMatrix confusionMatrix;
-		this.exception.expect(NullPointerException.class);
 		confusionMatrix = new ConfusionMatrix(null, "testLabel");
 	}
 
-	@Test
+	@Test(expected=NullPointerException.class)
 	public void testConfusionMatrixConstructorNullLabelThrowsException() {
 		@SuppressWarnings("unused")
 		ConfusionMatrix confusionMatrix;
 		this.setupConfusionMatrixData();
-		this.exception.expect(NullPointerException.class);
 		confusionMatrix = new ConfusionMatrix(this.confusionMatrixData, null);
 	}
 

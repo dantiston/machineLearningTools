@@ -7,15 +7,11 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class MLMathTest {
 
 	private DataTest dataTest = new DataTest();
 	private MachineLearningToolsTest test = new MachineLearningToolsTest();
-
-	@org.junit.Rule
-	public final ExpectedException exception = ExpectedException.none();
 
 	// Constants
 	private final Double threshold = 0.000000001d;
@@ -54,9 +50,8 @@ public class MLMathTest {
 		}
 	}
 
-	@Test
+	@Test(expected=ArithmeticException.class)
 	public void testLogarithmThrowsArithmeticException() {
-		this.exception.expect(ArithmeticException.class);
 		assertTrue(MLMath.log(-1d, 2) == 2);
 	}
 

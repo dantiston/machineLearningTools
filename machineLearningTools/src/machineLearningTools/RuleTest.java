@@ -15,7 +15,6 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class RuleTest {
 
@@ -166,61 +165,55 @@ public class RuleTest {
 
 	// Precondition tests
 
-	@org.junit.Rule
-	public ExpectedException exception = ExpectedException.none();
-
 	/**
 	 * Tests that Rule constructor throws exception if any of
 	 * its arguments are null
 	 */
-	@Test
+	@Test(expected=NullPointerException.class)
 	public void testRuleNullPathThrows() {
-		this.exception.expect(NullPointerException.class);
 		@SuppressWarnings("unused")
 		Rule rule = new Rule(null, this.testProbabilities, this.testDocCount);
 
 	}
 
-	@Test
+	@Test(expected=NullPointerException.class)
 	public void testRuleNullProbabilitiesThrows() {
-		this.exception.expect(NullPointerException.class);
 		@SuppressWarnings("unused")
 		Rule rule = new Rule(this.testPath1, null, this.testDocCount);
 	}
 
-	@Test
+	@Test(expected=NullPointerException.class)
 	public void testRuleNullDocCountThrows() {
-		this.exception.expect(NullPointerException.class);
 		@SuppressWarnings("unused")
 		Rule rule = new Rule(this.testPath1, this.testProbabilities, null);
 	}
 
-	@Test
+	@Test(expected=IllegalArgumentException.class)
 	public void testRuleEmptyPathThrowsIllegalArgument() {
 		ArrayList<String> emptyRules = new ArrayList<String>();
-		this.exception.expect(IllegalArgumentException.class);
 		@SuppressWarnings("unused")
 		Rule rule = new Rule(emptyRules, this.testProbabilities, this.testDocCount);
 	}
 
-	@Test
-	public void testRuleZeroDocCountThrowsIllegalArgument() {
+	@Test(expected=IllegalArgumentException.class)
+	public void testRuleZeroDocCountThrowsIllegalArgument0() {
 		@SuppressWarnings("unused")
-		Rule rule;
-		this.exception.expect(IllegalArgumentException.class);
-		rule = new Rule(this.testPath1, this.testProbabilities, 0);
-		this.exception.expect(IllegalArgumentException.class);
-		rule = new Rule(this.testPath1, this.testProbabilities, -1);
+		Rule rule = new Rule(this.testPath1, this.testProbabilities, 0);
+	}
+
+	@Test(expected=IllegalArgumentException.class)
+	public void testRuleZeroDocCountThrowsIllegalArgumentNegative() {
+		@SuppressWarnings("unused")
+		Rule rule = new Rule(this.testPath1, this.testProbabilities, -1);
 	}
 
 	/**
 	 * Tests that Rule constructor throws exception if its probability
 	 * map is empty
 	 */
-	@Test
+	@Test(expected=IllegalArgumentException.class)
 	public void testRuleEmptyProbabilityThrowsIllegalArgument() {
 		HashMap<String, Double> emptyProbs = new HashMap<String, Double>();
-		this.exception.expect(IllegalArgumentException.class);
 		@SuppressWarnings("unused")
 		Rule rule = new Rule(this.testPath1, emptyProbs, this.testDocCount);
 	}
@@ -229,12 +222,11 @@ public class RuleTest {
 	 * Tests that Rule constructor throws exception if its probabilities
 	 * don't sum to 1
 	 */
-	@Test
+	@Test(expected=IllegalArgumentException.class)
 	public void testRuleNot1ProbabilityThrowsIllegalArgument() {
 		HashMap<String, Double> probs = new HashMap<String, Double>();
 		probs.put(this.label1, 0.3d);
 		probs.put(this.label2, 0.3d);
-		this.exception.expect(IllegalArgumentException.class);
 		@SuppressWarnings("unused")
 		Rule rule = new Rule(this.testPath1, probs, this.testDocCount);
 	}
