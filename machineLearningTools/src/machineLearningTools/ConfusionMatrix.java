@@ -57,7 +57,7 @@ public class ConfusionMatrix extends NestedCounter<String> {
 		StringBuilder stringBuilder = new StringBuilder();
 
 		/* Sort Labels */
-		ArrayList<String> sortedKeys = new ArrayList<String>(this.getAllKeys());
+		ArrayList<String> sortedKeys = new ArrayList<String>(this.keySet());
 		Collections.sort(sortedKeys);
 
 		/* Header */

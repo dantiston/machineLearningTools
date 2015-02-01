@@ -1,23 +1,55 @@
 package machineLearningTools;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
- * A 2 by 2 matrix for integer counting. Automatically adds keys
- * in the case that
+ * A 2 dimensional matrix for integer counting. Automatically adds keys
+ * in the case that a key to key mapping is missing.
  *
  * @param <T> key type
  *
  * @author T.J. Trimble
  */
 public class NestedCounter<T> extends AbstractCounter<T> {
-	private HashMap<T, Counter<T>> values = new HashMap<T, Counter<T>>();
+	private Counter<List<T>> values = new Counter<List<T>>();
 	private HashSet<T> allKeys = new HashSet<T>();
-	private Counter<T> inner;
+	private HashMap<T, HashSet<T>> keyMap = new HashMap<T, HashSet<T>>();
 
 	// Core methods
+
+	/**
+	 * Combine two keys together to get key for Counter.
+	 *
+	 * @param key1
+	 * @param key2
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	private List<T> getHash(T key1, T key2) {
+		return Arrays.asList(key1, key2);
+	}
+
+	/**
+	 * Add keys to keyMap for toString()
+	 *
+	 * @param key1
+	 * @param key2
+	 */
+	private void addKeys(T key1, T key2) {
+		try {
+			this.keyMap.get(key1).add(key2);
+		} catch (NullPointerException e) {
+			HashSet<T> inner = new HashSet<T>();
+			inner.add(key2);
+			this.keyMap.put(key1, inner);
+		}
+		this.allKeys.add(key1);
+		this.allKeys.add(key2);
+	}
 
 	/**
 	 * Increment the value at key1, key2 by 1.<br>
@@ -27,17 +59,8 @@ public class NestedCounter<T> extends AbstractCounter<T> {
 	 * @param key2
 	 */
 	public void increment(final T key1, final T key2) {
-		try {
-			this.values.get(key1).increment(key2);
-		}
-		catch (NullPointerException e) {
-			this.inner = new Counter<T>();
-			this.inner.increment(key2);
-			this.values.put(key1, this.inner);
-			// Only do this if it is known that values doesn't contain key1
-			this.allKeys.add(key1);
-		}
-		this.allKeys.add(key2);
+		this.values.increment(this.getHash(key1, key2));
+		this.addKeys(key1, key2);
 	}
 
 	/**
@@ -48,17 +71,8 @@ public class NestedCounter<T> extends AbstractCounter<T> {
 	 * @param key2
 	 */
 	public void initialize(final T key1, final T key2) {
-		try {
-			this.values.get(key1).initialize(key2);
-		}
-		catch (NullPointerException e) {
-			this.inner = new Counter<T>();
-			this.inner.initialize(key2);
-			this.values.put(key1, this.inner);
-			// Only do this if it is known that values doesn't contain key1
-			this.allKeys.add(key1);
-		}
-		this.allKeys.add(key2);
+		this.values.initialize(this.getHash(key1, key2));
+		this.addKeys(key1, key2);
 	}
 
 	/**
@@ -70,16 +84,8 @@ public class NestedCounter<T> extends AbstractCounter<T> {
 	 * @return
 	 */
 	public Integer get(final T key1, final T key2) {
-		// relies on initialize()
-		// Check if Counter contains key1->key2 mapping
-		try {
-			return this.values.get(key1).get(key2);
-		}
-		catch (NullPointerException e) {
-			// Counter does not contain key1->key2 mapping, initialize
-			this.initialize(key1, key2);
-		}
-		return this.values.get(key1).get(key2);
+		this.addKeys(key1, key2);
+		return this.values.get(this.getHash(key1, key2));
 	}
 
 	// Other core methods
@@ -91,14 +97,11 @@ public class NestedCounter<T> extends AbstractCounter<T> {
 	 * @return
 	 */
 	public boolean containsValueAt(final T key1, final T key2) {
-		if (this.values.containsKey(key1) && this.values.get(key1).containsKey(key2)) {
-			return true;
-		}
-		return false;
+		return this.values.containsKey(this.getHash(key1, key2));
 	}
 
 	/**
-	 * Returns true if key is either a key1 or key2
+	 * Returns true iff key is either a key1 or key2
 	 *
 	 * @param key1
 	 * @param key2
@@ -109,19 +112,16 @@ public class NestedCounter<T> extends AbstractCounter<T> {
 		return this.allKeys.contains(key);
 	}
 
-	// Getters
-	protected HashSet<T> getAllKeys() {
-		return this.allKeys;
-	}
-
-	public Set<T> outerKeySet() {
-		return this.values.keySet();
-	}
-
 	// General map methods
+	/**
+	 *
+	 * Returns a set of the outer keys
+	 *
+	 * @see java.util.Map#keySet()
+	 */
 	@Override
 	public Set<T> keySet() {
-		return this.allKeys;
+		return this.keyMap.keySet();
 	}
 
 	@Override
@@ -131,7 +131,7 @@ public class NestedCounter<T> extends AbstractCounter<T> {
 
 	@Override
 	public int size() {
-		return this.values.size();
+		return this.keyMap.keySet().size();
 	}
 
 	// General methods
@@ -146,9 +146,36 @@ public class NestedCounter<T> extends AbstractCounter<T> {
 		return this.values.equals(obj);
 	}
 
+	/* (non-Javadoc)
+	 *
+	 * Constructs nested hashmap representation of flat solution
+	 *
+	 * @see java.lang.Object#toString()
+	 */
 	@Override
 	public String toString() {
-		return this.values.toString();
+		StringBuilder stringBuilder = new StringBuilder();
+		stringBuilder.append("{");
+		int i = 1;
+		int j;
+		for (T key1: this.keyMap.keySet()) {
+			j = 1;
+			stringBuilder.append(String.format("%s={", key1));
+			for (T key2: this.keyMap.get(key1)) {
+				stringBuilder.append(String.format("%s=%s", key2, this.values.get(this.getHash(key1, key2))));
+				if (j < this.keyMap.get(key1).size()) {
+					stringBuilder.append(", ");
+				}
+				j++;
+			}
+			stringBuilder.append("}");
+			if (i < this.keyMap.keySet().size()) {
+				stringBuilder.append(", ");
+			}
+			i++;
+		}
+		stringBuilder.append("}");
+		return stringBuilder.toString();
 	}
 
 	// Unsupported Map methods
@@ -166,5 +193,4 @@ public class NestedCounter<T> extends AbstractCounter<T> {
 	public Set<java.util.Map.Entry<T, Integer>> entrySet() {
 		throw new UnsupportedOperationException();
 	}
-
 }

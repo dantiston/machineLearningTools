@@ -42,7 +42,7 @@ public class NestedCounterTest {
 	// Basic Constructor
 
 	@Test
-	public void testNestedCounterBasicConstructorFunctions() {
+	public void testNestedCounterBasicConstructor() {
 		this.counter = new NestedCounter<String>();
 		this.counter.increment(this.key1, this.key2);
 		assertTrue(this.counter.get(this.key1, this.key2).equals(1));
@@ -135,7 +135,6 @@ public class NestedCounterTest {
 		// Add to sets
 		this.counter.increment(this.key1, this.key2);
 		gold.add(this.key1);
-		gold.add(this.key2);
 		// Check if keySet is correct
 		assertEquals(this.counter.keySet(), gold);
 	}
