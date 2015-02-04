@@ -1,22 +1,22 @@
 # machineLearningTools
 machineLearningTools is a java Machine Learning library that provides data structures, functions, and utilities to bootstrap Machine Learning Algorithm development.
 
-<p>machineLearningTools.machineLearningTools</p>
-  <p>Utilities</p>
-    <p>A collection of mathematical utilities and common data structure utilities common to machine learning algorithms.</p>
+* machineLearningTools.machineLearningTools
+  * Utilities
+    * collection of mathematical utilities and common data structure utilities common to machine learning algorithms.
   
-  <p>Data</p>
-    <p>A collection of data storage types for storing and managing classification data.</p>
+  * Data
+    * A collection of data storage types for storing and managing classification data.
   
-  <p>Counters</p>
-    <p>The Counter hierarchy is a collection of map-like types for counting objects, like tokens.</p>
+  * Counters
+    * The Counter hierarchy is a collection of map-like types for counting objects, like tokens.
   
-  <p>DistanceMeasures</p>
-    <p>The DistanceMeasure hierarchy is a collection of distance and similarity measures between Documents.</p>
+  * DistanceMeasures
+    * The DistanceMeasure hierarchy is a collection of distance and similarity measures between Documents.
   
-  <p>Generic</p>
-    <p>A collection of common data structures for machine learning algorithms, such as Trees.</p>
+  * Generic
+    * A collection of common data structures for machine learning algorithms, such as Trees.
   
   
-<p>machineLearningTools.machineLearningClassifiers</p>
-  <p>A collection of machine learning classifiers implemented using machineLearningTools.</p>
+* machineLearningTools.machineLearningClassifiers
+  * A collection of machine learning classifiers implemented using machineLearningTools.
