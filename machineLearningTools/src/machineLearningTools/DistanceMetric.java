@@ -1,6 +1,6 @@
 package machineLearningTools;
 
-public abstract class DistanceMetric extends DistanceMeasure {
+public abstract class DistanceMetric extends SymmetricMeasure {
 
 	public DistanceMetric(Document documentToClassify, Document documentToCompare) {
 		super(documentToClassify, documentToCompare);

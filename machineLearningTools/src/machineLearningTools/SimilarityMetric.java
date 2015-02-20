@@ -1,6 +1,6 @@
 package machineLearningTools;
 
-public abstract class SimilarityMetric extends DistanceMeasure {
+public abstract class SimilarityMetric extends SymmetricMeasure {
 
 	public SimilarityMetric(Document documentToClassify, Document documentToCompare) {
 		super(documentToClassify, documentToCompare);
@@ -13,7 +13,7 @@ public abstract class SimilarityMetric extends DistanceMeasure {
 	 */
 	@Override
 	public final int compareTo(DistanceMeasure anotherMeasure) {
-		return -this.distance.compareTo(anotherMeasure.distance);
+		return anotherMeasure.distance.compareTo(this.distance);
 	}
 
 }

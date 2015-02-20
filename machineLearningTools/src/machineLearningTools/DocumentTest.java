@@ -1,5 +1,6 @@
 package machineLearningTools;
 
+import static machineLearningTools.MLMath.pseudoEqual;
 import static machineLearningTools.Testing.testFile;
 import static machineLearningTools.Util.maxKeyByValue;
 import static machineLearningTools.Util.sortedKeysByValue;
@@ -47,6 +48,7 @@ public class DocumentTest {
 	private final int testGoldID = 4;
 	private final int testDocumentGoldSize = 3;
 	private final String unstructuredTextFile = testFile("unstructuredTextDocument.txt");
+	private final Double goldMagnitude = Math.sqrt(14); // sqrt(3^2 + 2^2 + 1^2)
 
 	/* Variables */
 	//// Gold Documents
@@ -528,5 +530,11 @@ public class DocumentTest {
 		assertTrue(Document.getDocCount() == 0);
 		this.testDocument = new Document(this.testDocumentBinaryString);
 		assertTrue(Document.getDocCount() == 1);
+	}
+
+	@Test
+	public void testDocumentGetMagnitude() {
+		this.testDocument = new Document(this.testDocumentRealString);
+		assertTrue(pseudoEqual(this.testDocument.getMagnitude(), this.goldMagnitude));
 	}
 }

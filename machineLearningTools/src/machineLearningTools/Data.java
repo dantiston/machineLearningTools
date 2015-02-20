@@ -35,9 +35,10 @@ public class Data {
 	// subtypes which differ only in data accessors, where
 	// one returns binary values and the other real values?
 
+	protected HashSet<String> allLabels;
+	protected HashSet<String> allFeatures;
+
 	private final HashMap<Integer, Document> data;
-	private HashSet<String> allLabels;
-	private HashSet<String> allFeatures;
 
 	/**
 	 * Load data from a file and construct a Data object
@@ -125,6 +126,34 @@ public class Data {
 	}
 
 	/**
+	 * Calculate the entropy of the features in the Documents in this Data object
+	 *
+	 * @return double representation of entropy of data
+	 *
+	 * @author T.J. Trimble
+	 */
+	public Double getEntropy(final Collection<Integer> docIDs) {
+		Double entropy = 0.0d;
+		if (docIDs.size() > 1) {
+			double probability;
+			Counter<String> labelCounts = new Counter<String>();
+			// Get counts of each label
+			for (int id: docIDs) {
+				labelCounts.increment(this.getLabel(id));
+			}
+			//// Calculate entropy
+			// Get sum of P(label)*log(P(label))
+			for (String label: labelCounts.keySet()) {
+				probability = labelCounts.get(label)/((double)docIDs.size());
+				entropy += probability * (Math.log(probability)/MLMath.log2);
+			}
+			// Entropy is negative sum
+			entropy = -entropy;
+		}
+		return entropy;
+	}
+
+	/**
 	 * Set the system output label for the given document. The label
 	 * is set as the String with the highest probability in the
 	 * probabilities Map parameter.
@@ -153,32 +182,6 @@ public class Data {
 			throw new NullPointerException("Data.setSysOutput received a null probabilities parameter!");
 		}
 		this.data.get(docID).setSysOutput(label, probabilities);
-	}
-
-	/**
-	 * @author T.J. Trimble
-	 * Calculate the entropy of the features in the Documents in this Data object
-	 * @return double representation of entropy of data
-	 */
-	public double getEntropy(final Collection<Integer> docIDs) {
-		double entropy = 0.0d;
-		if (docIDs.size() > 1) {
-			double probability;
-			Counter<String> labelCounts = new Counter<String>();
-			// Get counts of each label
-			for (int id: docIDs) {
-				labelCounts.increment(this.getLabel(id));
-			}
-			//// Calculate entropy
-			// Get sum of P(label)*log(P(label))
-			for (String label: labelCounts.keySet()) {
-				probability = labelCounts.get(label)/((double)docIDs.size());
-				entropy += probability * (Math.log(probability)/MLMath.log2);
-			}
-			// Entropy is negative sum
-			entropy = -entropy;
-		}
-		return entropy;
 	}
 
 	/**
@@ -241,14 +244,6 @@ public class Data {
 	}
 
 	/**
-	 * Return all labels sorted by probability
-	 * @return
-	 */
-	public HashSet<String> getAllLabels() {
-		return this.allLabels;
-	}
-
-	/**
 	 * Return a Set of all the features in all the Documents
 	 * in this Data object
 	 *
@@ -274,6 +269,7 @@ public class Data {
 
 	/**
 	 * @return JSON compatible string representation
+	 *
 	 * {DOC1_JSON, DOC2_JSON}
 	 * TODO: Once real valued features are implemented, change this
 	 */
@@ -296,6 +292,50 @@ public class Data {
 		}
 		stringBuilder.append("}");
 		return stringBuilder.toString();
+	}
+
+	/**
+	 * Writes the system output probabilities for each document, first
+	 * converting the probabilities from log10. <br><br>
+	 *
+	 * Uses the following format: <br>
+	 *
+	 * <b>instanceID true_label class1 prob1 class2 prob2 ...</b>
+	 *
+	 * @return
+	 */
+	public String getFormattedSystemOutput(boolean convertLogProbabilities) {
+		StringBuilder stringBuilder = new StringBuilder();
+		ArrayList<Integer> sortedKeys = new ArrayList<Integer>(this.data.keySet());
+		Collections.sort(sortedKeys);
+		for (int docID: sortedKeys) {
+			stringBuilder.append(this.data.get(docID).getFormattedSystemOutput(convertLogProbabilities));
+			stringBuilder.append("\n");
+		}
+		return stringBuilder.toString();
+	}
+
+	/**
+	 * Writes the system output probabilities for each document, first
+	 * converting the probabilities from log10. <br><br>
+	 *
+	 * Uses the following format: <br>
+	 *
+	 * <b>instanceID true_label class1 prob1 class2 prob2 ...</b>
+	 *
+	 * @param convertFromLogProbs
+	 * @return
+	 */
+	public String getFormattedSystemOutput() {
+		return this.getFormattedSystemOutput(false);
+	}
+
+	/**
+	 * Return all labels sorted by probability
+	 * @return
+	 */
+	public HashSet<String> getAllLabels() {
+		return this.allLabels;
 	}
 
 	/**
@@ -379,44 +419,5 @@ public class Data {
 			result += (prime * this.data.get(docID).hashCode());
 		}
 		return result;
-	}
-
-	/**
-	 * Writes the system output probabilities for each document, first
-	 * converting the probabilities from log10. <br><br>
-	 *
-	 * Uses the following format: <br>
-	 *
-	 * <b>instanceID true_label class1 prob1 class2 prob2 ...</b>
-	 *
-	 * @return
-	 */
-	public String getFormattedSystemOutput(boolean convertLogProbabilities) {
-		// For each document...
-		//   Sort labels by probability
-		//   Print
-		StringBuilder stringBuilder = new StringBuilder();
-		ArrayList<Integer> sortedKeys = new ArrayList<Integer>(this.data.keySet());
-		Collections.sort(sortedKeys);
-		for (int docID: sortedKeys) {
-			stringBuilder.append(this.data.get(docID).getFormattedSystemOutput(convertLogProbabilities));
-			stringBuilder.append("\n");
-		}
-		return stringBuilder.toString();
-	}
-
-	/**
-	 * Writes the system output probabilities for each document, first
-	 * converting the probabilities from log10. <br><br>
-	 *
-	 * Uses the following format: <br>
-	 *
-	 * <b>instanceID true_label class1 prob1 class2 prob2 ...</b>
-	 *
-	 * @param convertFromLogProbs
-	 * @return
-	 */
-	public String getFormattedSystemOutput() {
-		return this.getFormattedSystemOutput(false);
 	}
 }

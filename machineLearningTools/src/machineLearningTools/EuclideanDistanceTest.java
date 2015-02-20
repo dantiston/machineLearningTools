@@ -1,6 +1,8 @@
 package machineLearningTools;
 
+import static machineLearningTools.MLMath.pseudoEqual;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -14,8 +16,8 @@ public class EuclideanDistanceTest {
 
 	// Gold values
 	private final Double gold1 = 0.0d;
-	private final Double gold2 = 6.0d;
-	private final Double gold3 = Math.sqrt(27);
+	private final Double gold2 = 10.0d;
+	private final Double gold3 = 9.0d;
 	private final Document testDocument1 = new Document("label f1:1 f2:3");
 	private final Document testDocument2 = new Document("label f1:1 f2:3");
 	private final Document testDocument3 = new Document("label f3:1 f4:5");
@@ -34,6 +36,21 @@ public class EuclideanDistanceTest {
 		assertEquals(this.testMeasure1, this.gold1);
 		assertEquals(this.testMeasure2, this.gold2);
 		assertEquals(this.testMeasure3, this.gold3);
+	}
+
+//	@Test
+//	public void testEuclideanDistancePerformance() {
+//		List<EuclideanDistance> distances = new ArrayList<EuclideanDistance>();
+//		for (int i=0; i<1000000; i++) {
+//			distances.add(new EuclideanDistance(this.testDocument1, this.testDocument2));
+//		}
+//	}
+
+	@Test
+	public void testEuclideanDistanceIsSymmetrical() {
+		EuclideanDistance measure1 = new EuclideanDistance(this.testDocument3, this.testDocument4);
+		EuclideanDistance measure2 = new EuclideanDistance(this.testDocument4, this.testDocument3);
+		assertTrue(pseudoEqual(measure1.getDistance(), measure2.getDistance()));
 	}
 
 	@Test(expected=NullPointerException.class)

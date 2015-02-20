@@ -45,7 +45,7 @@ public abstract class DistanceMeasure implements Comparable<DistanceMeasure> {
 
 	@Override
 	public String toString() {
-		return this.distance.toString();
+		return "<"+this.distance.toString()+">";
 	}
 
 	@Override

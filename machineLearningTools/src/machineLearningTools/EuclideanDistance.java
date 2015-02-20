@@ -9,26 +9,26 @@ import java.util.HashSet;
  * as defined below: <br><br>
  *
  * EuclideanDistance(D.i, D.j) = <br>
- * sqrt(sum.k((f.ik - f.jk)^2)))
+ * sqrt(sum.k((f.ik - f.jk)^2))) ~=
+ * sum.k((f.ik - f.jk)^2) ~=
+ * sum.k(abs(f.ik - f.jk))
  *
  * @author T.J. Trimble
  */
 public class EuclideanDistance extends DistanceMetric {
-
-	private static NestedDictionary<Integer, Double> documentValues = new NestedDictionary<Integer, Double>();
 
 	public EuclideanDistance(Document documentToClassify, Document documentToCompare) {
 		super(documentToClassify, documentToCompare);
 		if (documentToClassify == null || documentToCompare == null) {
 			throw new NullPointerException("EuclideanDistance constructor received null parameter.");
 		}
-		Double distance = 0.0d;
+		int distance = 0;
 		HashSet<String> features = new HashSet<String>(documentToClassify.size()+documentToCompare.size());
 		features.addAll(documentToClassify.getFeatures());
 		features.addAll(documentToCompare.getFeatures());
 		for (String feature: features) {
-			distance += Math.pow(documentToClassify.getFeatCount(feature) - documentToCompare.getFeatCount(feature), 2);
+			distance += Math.abs(documentToClassify.getFeatCount(feature) - documentToCompare.getFeatCount(feature));
 		}
-		this.distance = Math.sqrt(distance);
+		this.distance = (double) distance;
 	}
 }

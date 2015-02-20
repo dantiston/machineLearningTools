@@ -33,13 +33,14 @@ public class Document implements Comparable<Document> {
 	// Core Members
 	private final int docID;
 	private final String label;
-	private Map<String, Integer> wordCounts;
+	private Map<String, Integer> featureCounts;
 
 	// Method Members
 	private String sysOutput;
 	private Map<String, Double> labelProbs;
 	private StringBuilder stringBuilder;
 	private String tempLabel;
+	private Double magnitude; // For Cosine Similarity, etc.
 
 	// Class Members
 	static int docCount;
@@ -65,7 +66,7 @@ public class Document implements Comparable<Document> {
 		}
 		this.docID = Document.docCount++;
 		this.label = "<unknown>";
-		this.wordCounts = new TokenCounter(data);
+		this.featureCounts = new TokenCounter(data);
 	}
 
 	/**
@@ -86,7 +87,7 @@ public class Document implements Comparable<Document> {
 		// Split and process data
 		String[] parts = data.split("\\s+");
 		this.label = parts[0];
-		this.wordCounts = new HashMap<String, Integer>(parts.length-1);
+		this.featureCounts = new HashMap<String, Integer>(parts.length-1);
 		for (String value: Arrays.copyOfRange(parts, 1, parts.length)) {
 			valuePart = value.split("[:]", 2);
 			// Check if valuePart is correct length
@@ -95,7 +96,7 @@ public class Document implements Comparable<Document> {
 			}
 			word = valuePart[0];
 			count = 0;
-			if (this.wordCounts.containsKey(word)) {
+			if (this.featureCounts.containsKey(word)) {
 				throw new IllegalArgumentException(String.format("Vector %s contains a non-unique word->count pairing. %s", data, Document.unstructuredError));
 			}
 			try {
@@ -103,7 +104,7 @@ public class Document implements Comparable<Document> {
 			} catch (NumberFormatException e) {
 				throw new NumberFormatException(String.format("Value %s in Document constructor failed to generate an integer representation.", value));
 			}
-			this.wordCounts.put(word, count);
+			this.featureCounts.put(word, count);
 		}
 	}
 
@@ -131,7 +132,7 @@ public class Document implements Comparable<Document> {
 		JSONObject json;
 		String feature;
 		Integer value;
-		this.wordCounts = new HashMap<String, Integer>();
+		this.featureCounts = new HashMap<String, Integer>();
 		// Get docID
 		this.docID = Integer.parseInt(key);
 		// Get label
@@ -155,7 +156,7 @@ public class Document implements Comparable<Document> {
 						feature = json.names().getString(i);
 						if (feature != null) {
 							value = (json.getString(feature) != null) ? Integer.parseInt(json.getString(feature)) : 1;
-							this.wordCounts.put(feature, value);
+							this.featureCounts.put(feature, value);
 						}
 					}
 				}
@@ -178,7 +179,7 @@ public class Document implements Comparable<Document> {
 		this.docID = document.docID;
 		Document.docCount++;
 		this.label = document.label;
-		this.wordCounts = document.wordCounts;
+		this.featureCounts = document.featureCounts;
 	}
 
 	/**
@@ -213,7 +214,7 @@ public class Document implements Comparable<Document> {
 	 */
 	void setSysOutput(final String label, final Map<String, Double> probabilities) {
 		if (label == null || probabilities == null) {
-			throw new NullPointerException("Document.setSysOutput received a null parameter!");
+			throw new NullPointerException("Document#setSysOutput received a null parameter!");
 		}
 		this.sysOutput = label;
 		this.labelProbs = probabilities;
@@ -229,8 +230,7 @@ public class Document implements Comparable<Document> {
 	 */
 	public void setSysOutput(final Rule rule) {
 		if (rule == null) {
-			System.err.println("Document.setSysOutput received a null Rule!");
-			throw new NullPointerException();
+			throw new NullPointerException("Document#setSysOutput received a null Rule!");
 		}
 		this.sysOutput = rule.getLabel();
 		this.labelProbs = rule.getProbabilities();
@@ -244,6 +244,9 @@ public class Document implements Comparable<Document> {
 	 * @param topK
 	 */
 	public void setSysOutput(List<Document> topK) {
+		if (topK == null) {
+			throw new NullPointerException("Document#setSysOutput received a null parameter: topK!");
+		}
 		final HashMap<String, Double> probabilities = new HashMap<String, Double>();
 		final Double toAdd = 1.0d/topK.size();
 		Double probability;
@@ -266,9 +269,27 @@ public class Document implements Comparable<Document> {
 	 */
 	public boolean contains(final String word) {
 		if (word == null) {
-
+			throw new NullPointerException("Document#contains received a null parameter: word!");
 		}
 		return this.getWords().contains(word);
+	}
+
+	/**
+	 * The magnitude is defined as: <br><br>
+	 *
+	 * sqrt(sum.k(f.ik^2))
+	 *
+	 * @return the magnitude of this document object
+	 */
+	public Double getMagnitude() {
+		if (this.magnitude == null) {
+			this.magnitude = 0.0d;
+			for (String feature: this.featureCounts.keySet()) {
+				this.magnitude += Math.pow(this.getFeatCount(feature), 2);
+			}
+			this.magnitude = Math.sqrt(this.magnitude);
+		}
+		return this.magnitude;
 	}
 
 	/**
@@ -292,7 +313,7 @@ public class Document implements Comparable<Document> {
 	 * @return this document's words/features
 	 */
 	public Set<String> getWords() {
-		return (this.wordCounts != null) ? this.wordCounts.keySet() : new HashSet<String>();
+		return (this.featureCounts != null) ? this.featureCounts.keySet() : new HashSet<String>();
 	}
 
 	/**
@@ -300,7 +321,7 @@ public class Document implements Comparable<Document> {
 	 * @return this document's word/feature counts
 	 */
 	public Map<String, Integer> getWordCounts() {
-		return (this.wordCounts != null) ? this.wordCounts : new HashMap<String, Integer>();
+		return (this.featureCounts != null) ? this.featureCounts : new HashMap<String, Integer>();
 	}
 
 	/**
@@ -372,7 +393,7 @@ public class Document implements Comparable<Document> {
 		}
 		int result;
 		try {
-			result = this.wordCounts.get(feature);
+			result = this.featureCounts.get(feature);
 		}
 		catch (NullPointerException e) {
 			result = 0;
@@ -406,13 +427,13 @@ public class Document implements Comparable<Document> {
 		// Get features
 		this.stringBuilder.append("\"features\":{");
 		int i = 0;
-		for (String feature: this.wordCounts.keySet()) {
+		for (String feature: this.featureCounts.keySet()) {
 			this.stringBuilder.append("\"");
 			this.stringBuilder.append(feature);
 			this.stringBuilder.append("\":\"");
-			this.stringBuilder.append(this.wordCounts.get(feature));
+			this.stringBuilder.append(this.featureCounts.get(feature));
 			this.stringBuilder.append("\"");
-			if (i != this.wordCounts.size()-1) {
+			if (i != this.featureCounts.size()-1) {
 				this.stringBuilder.append(",");
 			}
 			i++;
@@ -447,7 +468,7 @@ public class Document implements Comparable<Document> {
 		}
 		//// Check words
 		// Check key length
-		Set<String> tempSet = this.wordCounts.keySet();
+		Set<String> tempSet = this.featureCounts.keySet();
 		if (tempSet.size() != doc.getWords().size()) {
 			return false;
 		}
@@ -457,8 +478,8 @@ public class Document implements Comparable<Document> {
 			return false;
 		}
 		// Check values
-		for (String label: this.wordCounts.keySet()) {
-			if (!this.wordCounts.get(label).equals(doc.wordCounts.get(label))) {
+		for (String label: this.featureCounts.keySet()) {
+			if (!this.featureCounts.get(label).equals(doc.featureCounts.get(label))) {
 				return false;
 			}
 		}
@@ -474,9 +495,9 @@ public class Document implements Comparable<Document> {
 		// Add value representing label
 		result = result + (prime * this.label.hashCode());
 		// Add value representing keys + values
-		for (String key: this.wordCounts.keySet()) {
+		for (String key: this.featureCounts.keySet()) {
 			result += key.hashCode();
-			result += (11 * this.wordCounts.get(key));
+			result += (11 * this.featureCounts.get(key));
 		}
 		return result;
 	}
@@ -486,7 +507,7 @@ public class Document implements Comparable<Document> {
 	 * @return number of unique words/features in document
 	 */
 	protected int size() {
-		return this.wordCounts.size();
+		return this.featureCounts.size();
 	}
 
 	/**
