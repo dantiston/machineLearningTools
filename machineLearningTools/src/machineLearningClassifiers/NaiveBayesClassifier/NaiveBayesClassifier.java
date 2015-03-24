@@ -50,7 +50,7 @@ import machineLearningTools.NestedDictionary;
  *
  * @author T.J. Trimble
  */
-public class NaiveBayesClassifier implements MachineLearningClassifier {
+public class NaiveBayesClassifier extends MachineLearningClassifier {
 
 	// Parameters
 	private final Double classDelta;
@@ -65,7 +65,7 @@ public class NaiveBayesClassifier implements MachineLearningClassifier {
 	private NestedDictionary<String, Double> featLogProbs;
 	private NestedDictionary<String, Double> featProbs;
 	private Double condDeltaSum;
-	private Integer featureCount;
+	private Double featureCount;
 	private HashSet<String> allFeatures;
 
 	// Method values
@@ -85,9 +85,11 @@ public class NaiveBayesClassifier implements MachineLearningClassifier {
 	 * @param condDelta
 	 * @param sysOutputFile
 	 * @param modelFile
+	 * @param binarize
 	 * @author T.J. Trimble
 	 */
-	public NaiveBayesClassifier(Double classDelta, Double condDelta, String sysOutputFile, String modelFile) {
+	public NaiveBayesClassifier(Double classDelta, Double condDelta, String sysOutputFile, String modelFile, boolean binarize) {
+		super(binarize);
 		if (classDelta == null || condDelta == null || sysOutputFile == null || modelFile == null) {
 			throw new NullPointerException("NaivesBayesClassifier constructor passed null parameter;");
 		}
@@ -95,12 +97,20 @@ public class NaiveBayesClassifier implements MachineLearningClassifier {
 		this.condDelta = condDelta;
 		this.sysOutputFile = sysOutputFile;
 		this.modelFile = modelFile;
-		this.useBinarizedFeatures = false;
+		this.useBinarizedFeatures = binarize;
 	}
 
-	public NaiveBayesClassifier(Double classDelta, Double condDelta, String sysOutputFile, String modelFile, Boolean useBinarizedFeatures) {
-		this(classDelta, condDelta, sysOutputFile, modelFile);
-		this.useBinarizedFeatures = useBinarizedFeatures;
+	/**
+	 * Construct a NaiveBayesClassifier object with the given parameters.
+	 *
+	 * @param classDelta
+	 * @param condDelta
+	 * @param sysOutputFile
+	 * @param modelFile
+	 * @author T.J. Trimble
+	 */
+	public NaiveBayesClassifier(Double classDelta, Double condDelta, String sysOutputFile, String modelFile) {
+		this(classDelta, condDelta, sysOutputFile, modelFile, false);
 	}
 
 	/**
@@ -122,7 +132,7 @@ public class NaiveBayesClassifier implements MachineLearningClassifier {
 	@Override
 	public void train(String trainingDataFileName) {
 		if (trainingDataFileName == null) {
-			throw new NullPointerException("trainingDataFileName is null at NaiveBayesClassifier#train(trainingDataFileName);");
+			throw new NullPointerException("parameter trainingDataFileName is null at NaiveBayesClassifier#train(trainingDataFileName);");
 		}
 		//// Constants:
 		// count(C): number of classes
@@ -150,7 +160,7 @@ public class NaiveBayesClassifier implements MachineLearningClassifier {
 		//	 This means, only calculate probability for the labeled class
 
 		//// Initializations
-		this.trainingData = new Data(trainingDataFileName);
+		this.trainingData = this.getData(trainingDataFileName);
 		final Integer docCount = this.trainingData.size();
 
 		this.classProbs = new HashMap<String, Double>(); // P(C)
@@ -162,6 +172,10 @@ public class NaiveBayesClassifier implements MachineLearningClassifier {
 
 		this.featPerClassCounts = new NestedCounter<String>(); // Count of documents (binary-valued feature counts) that have a given feature per class; class->feature->count
 		this.featuresPerClass = new NestedDictionary<String, Integer>(); // Real-valued count of times feature occurs in documents per class; class->feature->count;
+
+		if (this.useBinarizedFeatures) {
+			this.featProbs = new NestedDictionary<String, Double>();
+		}
 
 		//// Read documents and calculate P(C), P(F|C)
 		// Read documents
@@ -235,13 +249,11 @@ public class NaiveBayesClassifier implements MachineLearningClassifier {
 		if (label == null || feature == null) {
 			throw new NullPointerException("A parameter is null at NaiveBayesClassifier#calculateBinaryFeatureProb();");
 		}
-		if (this.featProbs == null) {
-			this.featProbs = new NestedDictionary<String, Double>();
-		}
 		// Save prob
 		this.featProbs.put(label, feature, ((this.condDelta + (double)this.featPerClassCounts.get(label, feature))/this.probDenominators.get(label)));
 		// Return log prob
-		return (Math.log10(this.condDelta + (double)this.featPerClassCounts.get(label, feature)) - this.logProbDenominators.get(label));
+		return Math.log10(this.featProbs.get(label, feature));
+//		return (Math.log10(this.condDelta + (double)this.featPerClassCounts.get(label, feature)) - this.logProbDenominators.get(label));
 	}
 
 	/**
@@ -258,11 +270,11 @@ public class NaiveBayesClassifier implements MachineLearningClassifier {
 		if (label == null || feature == null) {
 			throw new NullPointerException("A parameter is null at NaiveBayesClassifier#calculateRealFeatureProb();");
 		}
-		this.featureCount = this.featuresPerClass.get(label, feature);
+		this.featureCount = (double)this.featuresPerClass.safeGet(label, feature, 0);
 		if (this.featureCount == null) {
-			this.featureCount = 0;
+			this.featureCount = 0.0d;
 		}
-		return (Math.log10(this.condDelta + (double)this.featureCount) - this.logProbDenominators.get(label));
+		return (Math.log10(this.condDelta + this.featureCount) - this.logProbDenominators.get(label));
 	}
 
 	/**
@@ -330,19 +342,19 @@ public class NaiveBayesClassifier implements MachineLearningClassifier {
 	 * In the binary case, class C is determined for a document D
 	 * with features F by the following calculation:
 	 *
-	 * ￼￼￼￼classify (x) -> <br>
-	 * = MUL.k(P(f.k|c))
-	 * = MUL.k->featuresInDoc(P(f.k|c)) * MUL.k->featuresNotInDoc(1 - P(f.k|c)) ->
-	 * = argmax.c P(c) * SUM.k->featuresInDoc(log(P(f.k | c))) * (1 - SUM.k->featuresNotInDoc(log(P(f.k | c))))
+	 * ￼￼￼￼classify (x) <br>
+	 * = MUL.k(P(f.k|c)) <br>
+	 * = MUL.k->featuresInDoc(P(f.k|c)) * MUL.k->featuresNotInDoc(1 - P(f.k|c)) <br>
+	 * = argmax.c P(c) * SUM.k->featuresInDoc(log(P(f.k | c))) * (1 - SUM.k->featuresNotInDoc(log(P(f.k | c)))) <br><br>
 	 *
 	 * In the multinomial case, class C is determined for a document D
-	 * with features F by the following calculation:
+	 * with features F by the following calculation: <br><br>
 	 *
-	 * classify (x) -> <br>
-	 * = classify (f.1, .., f.d) -> <br>
-	 * = argmax.c P(c|x) -> <br>
-	 * = argmax.c P(x|c) P(c) -> <br>
-	 * = argmax.c P(c) MUL.k P(f.k | c) -> <br>
+	 * classify (x) <br>
+	 * = classify (f.1, .., f.d) <br>
+	 * = argmax.c P(c|x) <br>
+	 * = argmax.c P(x|c) P(c) <br>
+	 * = argmax.c P(c) MUL.k P(f.k | c) <br>
 	 * = argmax.c P(c) SUM.k log(P(f.k | c)) <br>
 	 *
 	 * @param testingData
@@ -362,7 +374,7 @@ public class NaiveBayesClassifier implements MachineLearningClassifier {
 			for (String label: this.trainingData.getAllLabels()) {
 				this.probability = 0.0d;
 				for (String feature: this.allFeatures) {
-					this.probability += Math.log10(1.0d - this.featProbs.get(label, feature));
+					this.probability += Math.log10(1.0d - this.featProbs.safeGet(label, feature, 0.0d));
 				}
 				this.logReciprocalFeatToClassProbs.put(label, this.probability);
 			}
@@ -438,24 +450,6 @@ public class NaiveBayesClassifier implements MachineLearningClassifier {
 			result.put(label, this.probability);
 		}
 		return result;
-	}
-
-	/**
-	 * Classify each document in the testing data stored in the file at the
-	 * parameter testingDataFileName and compare with gold label.
-	 *
-	 *
-	 * @param testingDataFileName
-	 * @param testingLabel
-	 */
-	@Override
-	public void test(String testingDataFileName, String testingLabel) {
-		if (testingDataFileName == null || testingLabel == null) {
-			throw new NullPointerException("null parameter passed to NaiveBayesClassifier#test(testingDataFileName, testingLabel);");
-		}
-		Data testData = new Data(testingDataFileName);
-		this.classify(testData);
-		this.outputResults(testData, testingLabel);
 	}
 
 	/**
@@ -559,6 +553,10 @@ public class NaiveBayesClassifier implements MachineLearningClassifier {
 	}
 
 	NestedDictionary<String, Double> getFeatProbs() {
+		return this.featLogProbs;
+	}
+
+	NestedDictionary<String, Double> getFeatLogProbs() {
 		return this.featLogProbs;
 	}
 }

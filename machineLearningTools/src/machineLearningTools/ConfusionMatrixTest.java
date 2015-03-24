@@ -15,7 +15,7 @@ import org.junit.Test;
 public class ConfusionMatrixTest {
 
 	MachineLearningToolsTest test = new MachineLearningToolsTest();
-	DataTest dataTest = new DataTest();
+	RealValuedDataTest realValuedDataTest = new RealValuedDataTest();
 
 	/* ************************
 	 *  ConfusionMatrix tests
@@ -51,7 +51,7 @@ public class ConfusionMatrixTest {
 	}
 
 	public void setupConfusionMatrixData() {
-		this.confusionMatrixData = new Data(this.goldConfusionMatrixDataFile);
+		this.confusionMatrixData = new BinaryValuedData(this.goldConfusionMatrixDataFile);
 		this.confusionMatrixData.setSysOutput(0, this.test.key1, this.test.testDocumentProbabilities);
 		this.confusionMatrixData.setSysOutput(1, this.test.key2, this.test.testDocumentProbabilities);
 		this.confusionMatrixData.setSysOutput(2, this.test.key1, this.test.testDocumentProbabilities);
@@ -149,7 +149,7 @@ public class ConfusionMatrixTest {
 
 	@Test
 	public void testConfusionMatrixToStringEmpty() {
-		ConfusionMatrix emptyMatrix = new ConfusionMatrix(new Data(), "empty");
+		ConfusionMatrix emptyMatrix = new ConfusionMatrix(new BinaryValuedData(), "empty");
 		assertEquals(emptyMatrix.toString(), "Confusion Matrix for empty not utilized.");
 	}
 

@@ -215,7 +215,7 @@ public class CounterTest {
 
 	@Test
 	public void testCounterCustomKey() {
-		DocumentTest docTest = new DocumentTest();
+		BinaryValuedDocumentTest docTest = new BinaryValuedDocumentTest();
 		docTest.setupDocument();
 		this.docCounter = new Counter<Document>();
 		this.docCounter.increment(docTest.goldDocument);

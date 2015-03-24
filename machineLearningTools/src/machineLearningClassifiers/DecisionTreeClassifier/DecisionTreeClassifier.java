@@ -2,7 +2,6 @@ package machineLearningClassifiers.DecisionTreeClassifier;
 
 import static machineLearningTools.MLMath.informationGain;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -47,7 +46,8 @@ import machineLearningTools.Tree;
  *
  * @author T.J. Trimble
  */
-public class DecisionTreeClassifier implements MachineLearningClassifier {
+public class DecisionTreeClassifier extends MachineLearningClassifier {
+
 	//// Variables
 	// Parameters
 	private int maxDepth;
@@ -71,9 +71,11 @@ public class DecisionTreeClassifier implements MachineLearningClassifier {
 	 * @param minGain must be greater than or equal to 0
 	 * @param sysOutputFileName
 	 * @param modelFileName
+	 * @param binarized
 	 * @author T.J. Trimble
 	 */
-	public DecisionTreeClassifier(int maxDepth, Double minGain, String sysOutputFileName, String modelFileName) throws IllegalArgumentException {
+	public DecisionTreeClassifier(int maxDepth, Double minGain, String sysOutputFileName, String modelFileName, boolean binarized) throws IllegalArgumentException {
+		super(binarized);
 		if (minGain == null || sysOutputFileName == null || modelFileName == null) {
 			throw new NullPointerException("DecisionTreeClassifier constructor received a null argument;");
 		}
@@ -90,13 +92,26 @@ public class DecisionTreeClassifier implements MachineLearningClassifier {
 		this.modelFile = modelFileName;
 	}
 
+	/**
+	 * Construct a new DecisionTreeClassifier object to do classification.
+	 *
+	 * @param maxDepth must be greater than or equal to 1
+	 * @param minGain must be greater than or equal to 0
+	 * @param sysOutputFileName
+	 * @param modelFileName
+	 * @author T.J. Trimble
+	 */
+	public DecisionTreeClassifier(int maxDepth, Double minGain, String sysOutputFileName, String modelFileName) throws IllegalArgumentException {
+		this(maxDepth, minGain, sysOutputFileName, modelFileName, false);
+	}
+
 	@Override
 	public void train(String trainingDataFileName) {
 		// Load data
 		if (trainingDataFileName == null) {
 			throw new NullPointerException();
 		}
-		this.trainingData = new Data(trainingDataFileName);
+		this.trainingData = this.getData(trainingDataFileName);
 		// Recurse to build decision tree
 		this.tree = this.calculateTree(this.trainingData.getIDs(), 1);
 		// Calculate rules and save to object
@@ -111,28 +126,6 @@ public class DecisionTreeClassifier implements MachineLearningClassifier {
 			System.err.println("Error writing model file.");
 			e.printStackTrace();
 		}
-	}
-
-	/**
-	 * Load in modelFile
-	 *
-	 * TODO: this
-	 *
-	 * @param modelFile
-	 */
-	@Override
-	public void train(BufferedReader modelFile) {
-
-	}
-
-	@Override
-	public void test(String testingDataFileName, String testingLabel) {
-		if (testingDataFileName == null || testingLabel == null) {
-			throw new NullPointerException();
-		}
-		Data testData = new Data(testingDataFileName);
-		this.classify(testData);
-		this.outputResults(testData, testingLabel);
 	}
 
 	/**

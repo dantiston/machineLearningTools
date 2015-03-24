@@ -82,7 +82,7 @@ public class UtilTest {
 		for (Integer i=this.goldMin; i<=this.goldMax; i++) {
 			this.stringMap.put(i.toString(), i.toString());
 			this.integerMap.put(i.toString(), i);
-			this.docMap.put(i.toString(), new Document(this.testDocumentString));
+			this.docMap.put(i.toString(), new RealValuedDocument(this.testDocumentString));
 		}
 		// Set up gold unstructured text counts
 		this.goldUnstructuredTextCounts.put("Go", 2);

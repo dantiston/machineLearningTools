@@ -1,8 +1,5 @@
 package machineLearningTools;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -11,7 +8,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
@@ -19,8 +15,8 @@ import org.json.JSONObject;
  *
  * Sentences with associated IDs <br><br>
  * Specifically, an unordered collection of labeled documents,
- * where each document contains a label and a mapping of
- * words/features and (if applicable) their associated counts.
+ * where each document contains a label and an unordered mapping of
+ * words/features and their associated counts.<br>
  *
  * Includes methods for reading data from a file and accessing
  * documents by document ID
@@ -28,17 +24,32 @@ import org.json.JSONObject;
  * @author T.J. Trimble
  ** *********************************************************/
 
-public class Data {
-	// TODO: split into binary (current) and real-valued data
-	// NOTE: if data in input file is real-valued, store
-	// real values, else, store binary. Then, create two
-	// subtypes which differ only in data accessors, where
-	// one returns binary values and the other real values?
+public abstract class Data {
 
-	protected HashSet<String> allLabels;
-	protected HashSet<String> allFeatures;
+	private Set<String> allLabels;
+	private Set<String> allFeatures;
 
 	private final HashMap<Integer, Document> data;
+
+	// Abstract methods
+
+	/**
+	 * Read in a file of documents,
+	 * each specified with a label and a set of features
+	 *
+	 * @param dataFileName
+	 */
+	protected abstract HashMap<Integer, Document> readDataFromFile(final String dataFileName);
+
+	/**
+	 * Read in a JSON object of documents,
+	 * each specified with a label and a set of features
+	 *
+	 * @param trainingDataJSON
+	 */
+	protected abstract HashMap<Integer, Document> readDataFromJSON(final JSONObject Json);
+
+	// Concrete methods
 
 	/**
 	 * Load data from a file and construct a Data object
@@ -76,58 +87,10 @@ public class Data {
 	}
 
 	/**
-	 * Read in a file of documents,
-	 * each specified with a label and a set of features
-	 * @param dataFileName
-	 */
-	private HashMap<Integer, Document> readDataFromFile(final String dataFileName) {
-		Document.initialize();
-		HashMap<Integer, Document> result = new HashMap<Integer, Document>();
-		this.allLabels = new HashSet<String>();
-		String lineString;
-		try {
-			BufferedReader reader = new BufferedReader(new FileReader(dataFileName));
-			while ((lineString = reader.readLine()) != null) {
-				Document doc = new Document(lineString);
-				result.put(doc.getDocID(), doc);
-				this.allLabels.add(doc.getLabel());
-			}
-			reader.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.err.println("Error reading data from file.");
-			System.exit(1);
-		}
-		return result;
-	}
-
-	/**
-	 * Read in a JSON object of documents,
-	 * each specified with a label and a set of features
-	 * @param trainingDataJSON
-	 */
-	private HashMap<Integer, Document> readDataFromJSON(final JSONObject Json) {
-		Document.initialize();
-		this.allLabels = new HashSet<String>();
-		HashMap<Integer, Document> result = new HashMap<Integer, Document>();
-		String key;
-		Document doc;
-		for (int i=0; i<Json.names().length(); i++) {
-			try {
-				key = Json.names().getString(i);
-				doc = new Document((JSONObject)Json.get(key), key);
-				result.put(doc.getDocID(), doc);
-				this.allLabels.add(doc.getLabel());
-			} catch (JSONException e) {
-				e.printStackTrace();
-			}
-		}
-		return result;
-	}
-
-	/**
-	 * Calculate the entropy of the features in the Documents in this Data object
+	 * Calculate the entropy of the features in the specified Documents
+	 * in this Data object
 	 *
+	 * @param document IDs to include in entropy calculation.
 	 * @return double representation of entropy of data
 	 *
 	 * @author T.J. Trimble
@@ -151,6 +114,17 @@ public class Data {
 			entropy = -entropy;
 		}
 		return entropy;
+	}
+
+	/**
+	 * Calculate the entropy of the features in the Documents in this Data object
+	 *
+	 * @return double representation of entropy of data
+	 *
+	 * @author T.J. Trimble
+	 */
+	public Double getEntropy() {
+		return this.getEntropy(this.getIDs());
 	}
 
 	/**
@@ -245,7 +219,7 @@ public class Data {
 
 	/**
 	 * Return a Set of all the features in all the Documents
-	 * in this Data object
+	 * in this Data object.
 	 *
 	 * @return
 	 */
@@ -260,39 +234,21 @@ public class Data {
 	}
 
 	/**
-	 * Returns number of documents in object
-	 * @return number of documents in object
+	 * Return a Set of all the labels in all the Documents
+	 * in this Data object.
+	 *
+	 * @return
 	 */
-	public int size() {
-		return this.data.size();
+	public Set<String> getAllLabels() {
+		if (this.allLabels == null) {
+			this.allLabels = new HashSet<String>();
+			for (Document document: this.data.values()) {
+				this.allLabels.add(document.getLabel());
+			}
+		}
+		return this.allLabels;
 	}
 
-	/**
-	 * @return JSON compatible string representation
-	 *
-	 * {DOC1_JSON, DOC2_JSON}
-	 * TODO: Once real valued features are implemented, change this
-	 */
-	@Override
-	public String toString() {
-		StringBuilder stringBuilder = new StringBuilder();
-		int i = 0;
-		int size = this.data.keySet().size();
-		// Sort IDs
-		ArrayList<Document> documents = new ArrayList<Document>(this.data.values());
-		Collections.sort(documents);
-		// Build result
-		stringBuilder.append("{");
-		for (Document doc: documents) {
-			stringBuilder.append(doc.toString());
-			if (i != size-1) {
-				stringBuilder.append(",");
-			}
-			i++;
-		}
-		stringBuilder.append("}");
-		return stringBuilder.toString();
-	}
 
 	/**
 	 * Writes the system output probabilities for each document, first
@@ -331,11 +287,38 @@ public class Data {
 	}
 
 	/**
-	 * Return all labels sorted by probability
-	 * @return
+	 * Returns number of documents in object
+	 * @return number of documents in object
 	 */
-	public HashSet<String> getAllLabels() {
-		return this.allLabels;
+	public int size() {
+		return this.data.size();
+	}
+
+	/**
+	 * @return JSON compatible string representation
+	 *
+	 * {DOC1_JSON, DOC2_JSON}
+	 * TODO: Once real valued features are implemented, change this
+	 */
+	@Override
+	public String toString() {
+		StringBuilder stringBuilder = new StringBuilder();
+		int i = 0;
+		int size = this.data.keySet().size();
+		// Sort IDs
+		ArrayList<Document> documents = new ArrayList<Document>(this.data.values());
+		Collections.sort(documents);
+		// Build result
+		stringBuilder.append("{");
+		for (Document doc: documents) {
+			stringBuilder.append(doc.toString());
+			if (i != size-1) {
+				stringBuilder.append(",");
+			}
+			i++;
+		}
+		stringBuilder.append("}");
+		return stringBuilder.toString();
 	}
 
 	/**
@@ -369,8 +352,6 @@ public class Data {
 	 * are evaluated as equal. This method, and the Document's
 	 * hash code method, utilize prime coefficients to avoid
 	 * this, but it is still possible. Hash with caution.
-	 *
-	 * TODO: Update this note for real-valued Documents
 	 *
 	 * @see java.lang.Object#hashCode()
 	 */

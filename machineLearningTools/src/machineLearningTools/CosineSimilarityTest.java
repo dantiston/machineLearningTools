@@ -17,11 +17,11 @@ public class CosineSimilarityTest {
 	private CosineSimilarity emptyMeasure;
 
 	// Gold values
-	private final Document testDocument1 = new Document("label f1:1 f2:3");
-	private final Document testDocument2 = new Document("label f1:1 f2:3");
-	private final Document testDocument3 = new Document("label f3:1 f4:5");
-	private final Document testDocument4 = new Document("label f1:3 f2:3 f3:3");
-	private final Document testDocument5 = new Document("label");
+	private final Document testDocument1 = new RealValuedDocument("label f1:1 f2:3");
+	private final Document testDocument2 = new RealValuedDocument("label f1:1 f2:3");
+	private final Document testDocument3 = new RealValuedDocument("label f3:1 f4:5");
+	private final Document testDocument4 = new RealValuedDocument("label f1:3 f2:3 f3:3");
+	private final Document testDocument5 = new RealValuedDocument("label");
 	private final Double gold1 = 1.0d;
 	private final Double gold2 = 0.0d;
 	private final Double gold3 = (3.0d/(this.testDocument3.getMagnitude()*this.testDocument4.getMagnitude()));
@@ -50,10 +50,16 @@ public class CosineSimilarityTest {
 	}
 
 	@Test
-	public void testCosineSimilarityIsSymmetrical() {
+	public void testCosineSimilarityIsSymmetric() {
 		CosineSimilarity measure1 = new CosineSimilarity(this.testDocument3, this.testDocument4);
 		CosineSimilarity measure2 = new CosineSimilarity(this.testDocument4, this.testDocument3);
 		assertTrue(pseudoEqual(measure1.getDistance(), measure2.getDistance()));
+	}
+
+	@Test
+	public void testCosineSimilarityIsReflexive() {
+		CosineSimilarity measure1 = new CosineSimilarity(this.testDocument3, this.testDocument3);
+		assertTrue(pseudoEqual(measure1.getDistance(), 1.0d));
 	}
 
 	@Test(expected=NullPointerException.class)

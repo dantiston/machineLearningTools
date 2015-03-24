@@ -148,9 +148,9 @@ public class NestedCounterTest {
 
 	@Test
 	public void testNestedCounterCustomKey() {
-		DocumentTest docTest = new DocumentTest();
+		BinaryValuedDocumentTest docTest = new BinaryValuedDocumentTest();
 		docTest.setupDocument();
-		Document doc2 = new Document("This is a test document.", true);
+		Document doc2 = new RealValuedDocument("This is a test document.", true);
 		this.docCounter = new NestedCounter<Document>();
 		this.docCounter.increment(docTest.goldDocument, doc2);
 		assertThat(this.docCounter.get(docTest.goldDocument, doc2), is(1));

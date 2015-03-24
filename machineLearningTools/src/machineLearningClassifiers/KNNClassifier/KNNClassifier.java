@@ -47,7 +47,7 @@ import machineLearningTools.SymmetricMeasure;
  *
  * @author T.J. Trimble
  */
-public class KNNClassifier implements MachineLearningClassifier {
+public class KNNClassifier extends MachineLearningClassifier {
 
 	private Data trainingData;
 
@@ -73,7 +73,8 @@ public class KNNClassifier implements MachineLearningClassifier {
 	 * @author T.J. Trimble
 	 * @param sysOutputFile
 	 */
-	public KNNClassifier(Integer Kvalue, String simFunction, String sysOutputFile) {
+	public KNNClassifier(Integer Kvalue, String simFunction, String sysOutputFile, boolean binarized) {
+		super(binarized);
 		this.Kvalue = Kvalue;
 		this.sysOutputFile = sysOutputFile;
 		this.simFunction = simFunction.toLowerCase();
@@ -81,6 +82,24 @@ public class KNNClassifier implements MachineLearningClassifier {
 		if (!(KNNClassifier.euclideanOptions.contains(simFunction) || KNNClassifier.cosineOptions.contains(simFunction))) {
 			throw new IllegalArgumentException("simFunction parameter of KNNClassifier must be one of {1,E,e,[Ee]uclidean,2,C,e,[Cc]osine}");
 		}
+	}
+
+	/**
+	 * Construct a KNNClassifier object with the given parameters.
+	 *
+	 * <b>Parameters:</b> <br><br>
+	 *   	<b>K:</b> number of neighbors to consider when classifying <br>
+	 *      <b>simFunction:</b><br>
+	 *      	[1,e,[Ee]uclidean] Use Euclidean distance as the measure between vectors <br>
+	 *      	[2,c,[Cc]osine] Use Cosine similarity as the measure between vectors <br>
+ 	 *   	<b>sysOutput:</b> filename to output system output containing
+ 	 *   		a sorted list of instances with label to probabilities <br>
+	 *
+	 * @author T.J. Trimble
+	 * @param sysOutputFile
+	 */
+	public KNNClassifier(Integer Kvalue, String simFunction, String sysOutputFile) {
+		this(Kvalue, simFunction, sysOutputFile, false);
 	}
 
 	/**
@@ -131,21 +150,6 @@ public class KNNClassifier implements MachineLearningClassifier {
 	}
 
 	/**
-	 *
-	 *
-	 * @see machineLearningTools.MachineLearningClassifier#test(java.lang.String, java.lang.String)
-	 */
-	@Override
-	public void test(String testingDataFileName, String testingLabel) {
-		if (testingDataFileName == null || testingLabel == null) {
-			throw new NullPointerException("null parameter passed to KNNClassifier#test(testingDataFileName, testingLabel);");
-		}
-		Data testData = new Data(testingDataFileName);
-		this.classify(testData);
-		this.outputResults(testData, testingLabel);
-	}
-
-	/**
 	 * Prints a confusion matrix of the system results to stdout.
 	 *
 	 * @see machineLearningTools.MachineLearningClassifier#outputResults(machineLearningTools.Data, java.lang.String)
@@ -189,7 +193,7 @@ public class KNNClassifier implements MachineLearningClassifier {
 	 */
 	@Override
 	public void train(String trainingDataFileName) {
-		this.trainingData = new Data(trainingDataFileName);
+		this.trainingData = this.getData(trainingDataFileName);
 	}
 
 	/**

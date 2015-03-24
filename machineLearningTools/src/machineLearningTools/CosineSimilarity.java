@@ -7,7 +7,7 @@ package machineLearningTools;
  * as defined below: <br><br>
  *
  * CosineSimilarity(D.i, D.j) = <br>
- * sum.k(f.ik, f.jk)/(sqrt(sum.k(a.ik^2))*sqrt(sum.k(a.jk^2)))
+ * sum.k(f.ik * f.jk)/(sqrt(sum.k(a.ik^2))*sqrt(sum.k(a.jk^2)))
  *
  * @author T.J. Trimble
  */

@@ -15,18 +15,14 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.junit.Test;
 
-public class DataTest {
+public class BinaryValuedDataTest {
 
 	MachineLearningToolsTest test = new MachineLearningToolsTest();
 
-	/* ************************
-	 *  Data tests
-	 * ************************/
-
 	/* Constants */
-	private final String testVectorFile = testFile("example.vectors.txt");
-	private final String testVectorJsonFile = testFile("example.vectors.json");
-	private final String otherVectorJsonFile = testFile("other.vectors.json");
+	private final String testVectorFile = testFile("example.binary.vectors.txt");
+	private final String testVectorJsonFile = testFile("example.binary.vectors.json");
+	private final String otherVectorJsonFile = testFile("other.binary.vectors.json");
 
 	/* Variables */
 	private JSONObject goldDataJson;
@@ -46,10 +42,10 @@ public class DataTest {
 		this.goldDataJson = new JSONObject();
 		this.otherDataJson = new JSONObject();
 		this.setupJsonData();
-		this.test.goldData = new Data(this.goldDataJson);
-		this.test.goldData2 = new Data(this.goldDataJson);
-		this.test.goldData3 = new Data(this.goldDataJson);
-		this.test.otherData = new Data(this.otherDataJson);
+		this.test.goldData = new BinaryValuedData(this.goldDataJson);
+		this.test.goldData2 = new BinaryValuedData(this.goldDataJson);
+		this.test.goldData3 = new BinaryValuedData(this.goldDataJson);
+		this.test.otherData = new BinaryValuedData(this.otherDataJson);
 	}
 
 	public void setupJsonData() {
@@ -170,20 +166,14 @@ public class DataTest {
 	 * and readDataFromFile()
 	 */
 	@Test
-	public void testDataConstructorBinaryValued() {
+	public void testBinaryValuedDataConstructor() {
 		this.setupData();
 		assertTrue(this.test.goldData != null);
 		// Load data
-		Data systemData = new Data(this.testVectorFile);
+		Data systemData = new BinaryValuedData(this.testVectorFile);
 		// Make sure system loads data equivalent to gold data
 		assertTrue(systemData.equals(this.test.goldData));
 	}
-
-//	@Ignore
-//	@Test
-//	public void testDataConstructorRealValued() {
-//
-//	}
 
 	/**
 	 * This test relies on readDataFromJSON()
@@ -191,7 +181,7 @@ public class DataTest {
 	 */
 	@Test
 	public void testDataConstructorEmpty() {
-		Data emptyData = new Data();
+		Data emptyData = new BinaryValuedData();
 		assertEquals(emptyData.size(), 0);
 	}
 
@@ -203,7 +193,7 @@ public class DataTest {
 	@Test(expected=NullPointerException.class)
 	public void testDataJSONConstructorNullThrowsException() {
 		JSONObject nullJSON = null;
-		Data systemData = new Data(nullJSON);
+		Data systemData = new BinaryValuedData(nullJSON);
 	}
 
 	/**
@@ -214,7 +204,7 @@ public class DataTest {
 	@Test(expected=NullPointerException.class)
 	public void testDataStringConstructorNullThrowsException() {
 		String nullFileName = null;
-		Data systemData = new Data(nullFileName);
+		Data systemData = new BinaryValuedData(nullFileName);
 	}
 
 
@@ -224,10 +214,10 @@ public class DataTest {
 	@Test
 	public void testDataReadDataFromFile() {
 		// Load data from file
-		Data systemData = new Data(this.testVectorFile);
+		Data systemData = new BinaryValuedData(this.testVectorFile);
 		// Convert data to JSON using (gold) org.json library
 		this.setupJsonData();
-		Data jsonData = new Data(this.goldDataJson);
+		Data jsonData = new BinaryValuedData(this.goldDataJson);
 		// Compare to gold JSON
 		assertTrue(systemData.equals(jsonData));
 	}
@@ -236,7 +226,7 @@ public class DataTest {
 	public void testDataReadDataJSON() {
 		// Load data from gold JSON
 		this.setupJsonData();
-		Data jsonData = new Data(this.goldDataJson);
+		Data jsonData = new BinaryValuedData(this.goldDataJson);
 		// Output JSON using (gold) org.json library
 		JSONTokener jsonTokener = new JSONTokener(jsonData.toString());
 		JSONObject systemJSON = null;
@@ -261,8 +251,8 @@ public class DataTest {
 
 	@Test
 	public void testDataGetEntropy() {
-		assertTrue(this.test.infoGainGoldData.getEntropy(this.test.goldWith) == this.test.goldWithEnt);
-		assertTrue(this.test.infoGainGoldData.getEntropy(this.test.goldWithOut) == this.test.goldWithOutEnt);
+		assertTrue(this.test.infoGainGoldBinaryData.getEntropy(this.test.goldWith) == this.test.goldWithEnt);
+		assertTrue(this.test.infoGainGoldBinaryData.getEntropy(this.test.goldWithOut) == this.test.goldWithOutEnt);
 	}
 
 	@Test
@@ -275,6 +265,12 @@ public class DataTest {
 	public void testDataGetAllLabels() {
 		this.setupData();
 		assertEquals(this.test.goldData.getAllLabels(), this.test.goldLabels);
+	}
+
+	@Test
+	public void testBinaryValuedDataGetAllFeatures() {
+		this.setupData();
+		assertEquals(this.test.goldData.getAllFeatures(), this.test.goldFeatures);
 	}
 
 }

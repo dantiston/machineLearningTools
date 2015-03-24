@@ -10,7 +10,7 @@ import org.junit.Test;
 
 public class MLMathTest {
 
-	private DataTest dataTest = new DataTest();
+	private RealValuedDataTest realValuedDataTest = new RealValuedDataTest();
 	private MachineLearningToolsTest test = new MachineLearningToolsTest();
 
 	// Constants
@@ -85,14 +85,14 @@ public class MLMathTest {
 	// Information Gain Tests
 
 	private void setupInformationGain() {
-		this.withEnt = this.test.infoGainGoldData.getEntropy(this.test.goldWith);
+		this.withEnt = this.test.infoGainGoldBinaryData.getEntropy(this.test.goldWith);
 		this.withSize = this.test.goldWith.size();
-		this.withOutEnt = this.test.infoGainGoldData.getEntropy(this.test.goldWithOut);
+		this.withOutEnt = this.test.infoGainGoldBinaryData.getEntropy(this.test.goldWithOut);
 		this.withOutSize = this.test.goldWithOut.size();
-		this.topEnt = this.test.infoGainGoldData.getEntropy(this.test.infoGainGoldData.getIDs());
+		this.topEnt = this.test.infoGainGoldBinaryData.getEntropy(this.test.infoGainGoldBinaryData.getIDs());
 		// Set up Data
-		this.dataTest.setupData();
-		this.goldData = this.dataTest.test.goldData;
+		this.realValuedDataTest.setupData();
+		this.goldData = this.realValuedDataTest.test.goldData;
 	}
 
 	@Test
@@ -119,7 +119,7 @@ public class MLMathTest {
 	@Test
 	public void testInformationGainWithEntropyAndTopSignature() {
 		this.setupInformationGain();
-		Double difference = (informationGain(this.test.goldWith, this.test.goldWithOut, this.test.infoGainGoldData.getIDs(), this.goldData) - this.test.goldGain);
+		Double difference = (informationGain(this.test.goldWith, this.test.goldWithOut, this.test.infoGainGoldBinaryData.getIDs(), this.goldData) - this.test.goldGain);
 		assertTrue(Math.abs(difference) < this.threshold);
 	}
 

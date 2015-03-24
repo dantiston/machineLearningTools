@@ -24,7 +24,7 @@ import org.junit.Test;
 public class TreeTest {
 
 	// Constants
-	private final DataTest test = new DataTest();
+	private final RealValuedDataTest test = new RealValuedDataTest();
 	private final Set<Integer> subsetDocIDs = new HashSet<Integer>(Arrays.asList(new Integer[]{1, 2, 3, 4, 5}));
 	private final String testFeature = "testFeature";
 	private final String goldOtherTreeString = "{\"feature\":\"testFeature\",\"docIDs\":[\"1\",\"2\",\"3\",\"4\",\"5\"],\"children\":[]}";

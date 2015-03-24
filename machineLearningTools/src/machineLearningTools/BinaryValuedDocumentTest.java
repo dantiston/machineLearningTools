@@ -25,9 +25,9 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.junit.Test;
 
-public class DocumentTest {
+public class BinaryValuedDocumentTest {
 
-	private DataTest test = new DataTest();
+	private BinaryValuedDataTest test = new BinaryValuedDataTest();
 
 	/* ************************
 	 *  Document tests
@@ -48,7 +48,7 @@ public class DocumentTest {
 	private final int testGoldID = 4;
 	private final int testDocumentGoldSize = 3;
 	private final String unstructuredTextFile = testFile("unstructuredTextDocument.txt");
-	private final Double goldMagnitude = Math.sqrt(14); // sqrt(3^2 + 2^2 + 1^2)
+	private final Double goldMagnitude = Math.sqrt(3); // sqrt(1^2 + 1^2 + 1^2)
 
 	/* Variables */
 	//// Gold Documents
@@ -98,11 +98,11 @@ public class DocumentTest {
 		}
 		// goldDocument is the longest document in the gold Data
 		this.sortedDocs = sortedKeysByValue(this.docSizes, true);
-		this.goldDocument = new Document(this.goldData.getDoc(this.sortedDocs.get(0)));
-		this.goldDocument2 = new Document(this.goldDocument);
-		this.goldDocument3 = new Document(this.goldDocument);
+		this.goldDocument = new BinaryValuedDocument(this.goldData.getDoc(this.sortedDocs.get(0)));
+		this.goldDocument2 = new BinaryValuedDocument(this.goldDocument);
+		this.goldDocument3 = new BinaryValuedDocument(this.goldDocument);
 		// otherDocument is the second longest document in the gold Data
-		this.otherDocument = new Document(this.goldData.getDoc(this.sortedDocs.get(1)));
+		this.otherDocument = new BinaryValuedDocument(this.goldData.getDoc(this.sortedDocs.get(1)));
 		// Load goldDocumentJSON
 		try {
 			// Construct gold string
@@ -122,12 +122,12 @@ public class DocumentTest {
 			this.jsonTokener = new JSONTokener(new BufferedReader(new FileReader(this.goldDocumentRealJSONFile)));
 			this.goldDocumentRealJSON = (JSONObject)this.jsonTokener.nextValue();
 			this.goldDocumentRealIDString = this.goldDocumentRealJSON.names().getString(0);
-			this.goldDocumentRealFromJSON = new Document(this.goldDocumentRealJSON.getJSONObject(this.goldDocumentRealIDString), this.goldDocumentRealIDString);
+			this.goldDocumentRealFromJSON = new BinaryValuedDocument(this.goldDocumentRealJSON.getJSONObject(this.goldDocumentRealIDString), this.goldDocumentRealIDString);
 			// Load Real-valued JSON test document
 			this.jsonTokener = new JSONTokener(new BufferedReader(new FileReader(this.testDocumentRealJSONFile)));
 			this.testDocumentRealJSON = (JSONObject)this.jsonTokener.nextValue();
 			this.testDocumentRealIDString = this.testDocumentRealJSON.names().getString(0);
-			this.testDocumentRealFromJSON = new Document(this.testDocumentRealJSON.getJSONObject(this.testDocumentRealIDString), this.testDocumentRealIDString);
+			this.testDocumentRealFromJSON = new BinaryValuedDocument(this.testDocumentRealJSON.getJSONObject(this.testDocumentRealIDString), this.testDocumentRealIDString);
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -143,7 +143,7 @@ public class DocumentTest {
 			if (this.jsonTokener.more()) {
 				this.testDocumentJSON = (JSONObject) this.jsonTokener.nextValue();
 				this.testDocumentKey = this.testDocumentJSON.names().getString(0);
-				this.testDocumentFromJSON = new Document((JSONObject)this.testDocumentJSON.get(this.testDocumentKey), this.testDocumentKey);
+				this.testDocumentFromJSON = new BinaryValuedDocument((JSONObject)this.testDocumentJSON.get(this.testDocumentKey), this.testDocumentKey);
 			}
 		} catch (JSONException e) {
 			e.printStackTrace();
@@ -173,17 +173,6 @@ public class DocumentTest {
 
 	/* Tests */
 	// equals tests
-
-	@Test
-	public void testDocumentEqualsDifferentValues() {
-		this.setupDocument();
-		try {
-			Document testDocument = new Document(this.goldDocumentRealJSON.getJSONObject(this.goldDocumentRealIDString), this.goldDocumentRealIDString);
-			assertFalse(this.goldDocument.equals(testDocument));
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-	}
 
 	@Test
 	public void testDocumentEqualsNegative() {
@@ -286,7 +275,7 @@ public class DocumentTest {
 
 	@Test
 	public void testDocumentSize() {
-		this.testDocument = new Document(this.testDocumentBinaryString);
+		this.testDocument = new BinaryValuedDocument(this.testDocumentBinaryString);
 		assertThat(this.testDocument.size(), is(this.testDocumentGoldSize));
 	}
 
@@ -299,7 +288,7 @@ public class DocumentTest {
 	public void testDocumentInitialize() {
 		Document.initialize();
 		assertTrue(Document.getDocCount() == 0);
-		this.testDocument = new Document(this.testDocumentBinaryString);
+		this.testDocument = new BinaryValuedDocument(this.testDocumentBinaryString);
 		assertTrue(Document.getDocCount() == 1);
 		Document.initialize();
 		assertTrue(Document.getDocCount() == 0);
@@ -314,41 +303,36 @@ public class DocumentTest {
 	@Test
 	public void testDocumentConstructorFromStringBinary() {
 		this.setupDocumentWithTestDocument();
-		this.testDocument = new Document(this.testDocumentBinaryString);
+		this.testDocument = new BinaryValuedDocument(this.testDocumentBinaryString);
 		assertTrue(this.testDocument.equals(this.testDocumentFromJSON));
 	}
 
 	@Test
 	public void testDocumentConstructorFromStringRealValued() {
 		this.setupDocument();
-		Document testDocument = new Document(this.testDocumentRealString);
+		Document testDocument = new BinaryValuedDocument(this.testDocumentRealString);
 		assertTrue(testDocument.equals(this.testDocumentRealFromJSON));
 	}
 
 	@Test(expected=IllegalArgumentException.class)
 	public void testDocumentConstructorFromStringThrowsForNoColon() {
-		this.testDocument = new Document("label feat");
+		this.testDocument = new BinaryValuedDocument("label feat");
 	}
 
 	@Test(expected=IllegalArgumentException.class)
 	public void testDocumentConstructorFromStringThrowsForDuplicateFeatures() {
-		this.testDocument = new Document("label feat:1 feat:2");
+		this.testDocument = new BinaryValuedDocument("label feat:1 feat:2");
 	}
 
 	@Test(expected=IllegalArgumentException.class)
 	public void testDocumentConstructorFromStringThrowsIllegalArgumentExceptionWithNoColon() {
-		new Document("label w1 w2");
-	}
-
-	@Test(expected=NumberFormatException.class)
-	public void testDocumentConstructorFromStringThrowsNumberFormatExceptionWithBadNumberRepresentation() {
-		new Document("label w1:abc w2:&^%");
+		new BinaryValuedDocument("label w1 w2");
 	}
 
 	@Test(expected=NullPointerException.class)
 	public void testDocumentConstructorFromNullString() {
 		String nullString = null;
-		this.testDocument = new Document(nullString);
+		this.testDocument = new BinaryValuedDocument(nullString);
 	}
 
 	// Constructor from JSON tests
@@ -357,7 +341,7 @@ public class DocumentTest {
 	public void testDocumentConstructorFromJSONBinary() {
 		this.setupDocument();
 		try {
-			this.testDocument = new Document(this.goldDocumentBinaryJSON.getJSONObject(this.goldDocumentBinaryIDString), this.goldDocumentBinaryIDString);
+			this.testDocument = new BinaryValuedDocument(this.goldDocumentBinaryJSON.getJSONObject(this.goldDocumentBinaryIDString), this.goldDocumentBinaryIDString);
 			assertTrue(this.testDocument.equals(this.goldDocument));
 		} catch (JSONException e) {
 			e.printStackTrace();
@@ -368,7 +352,7 @@ public class DocumentTest {
 	public void testDocumentConstructorFromJSONRealValued() {
 		try {
 			this.setupDocument();
-			Document testDocument = new Document(this.goldDocumentRealJSON.getJSONObject(this.goldDocumentRealIDString), this.goldDocumentRealIDString);
+			Document testDocument = new BinaryValuedDocument(this.goldDocumentRealJSON.getJSONObject(this.goldDocumentRealIDString), this.goldDocumentRealIDString);
 			assertTrue(testDocument.equals(this.goldDocumentRealFromJSON));
 		} catch (JSONException e) {
 			e.printStackTrace();
@@ -382,7 +366,7 @@ public class DocumentTest {
 			this.jsonTokener = new JSONTokener("{\"8\":{\"label\":\"talk.politics.misc\"}}");
 			JSONObject testJSON;
 			testJSON = (JSONObject) this.jsonTokener.nextValue();
-			new Document(testJSON.getJSONObject(this.goldDocumentRealIDString), this.goldDocumentRealIDString);
+			new BinaryValuedDocument(testJSON.getJSONObject(this.goldDocumentRealIDString), this.goldDocumentRealIDString);
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
@@ -395,7 +379,7 @@ public class DocumentTest {
 			this.jsonTokener = new JSONTokener("{\"8\":{\"features\":{\"com\":\"5\",\"your\":\"4\",\"cheaper\":\"1\"}}}");
 			JSONObject testJSON;
 			testJSON = (JSONObject) this.jsonTokener.nextValue();
-			new Document(testJSON.getJSONObject(this.goldDocumentRealIDString), this.goldDocumentRealIDString);
+			new BinaryValuedDocument(testJSON.getJSONObject(this.goldDocumentRealIDString), this.goldDocumentRealIDString);
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
@@ -404,21 +388,21 @@ public class DocumentTest {
 	@Test(expected=NullPointerException.class)
 	public void testDocumentConstructorFromNullJSON() {
 		JSONObject nullJSON = null;
-		this.testDocument = new Document(nullJSON, "key1");
+		this.testDocument = new BinaryValuedDocument(nullJSON, "key1");
 	}
 
 	@Test(expected=NullPointerException.class)
 	public void testDocumentConstructorFromNullJSONKey() {
 		this.setupDocument();
 		String nullKey = null;
-		this.testDocument = new Document(this.goldDocumentBinaryJSON, nullKey);
+		this.testDocument = new BinaryValuedDocument(this.goldDocumentBinaryJSON, nullKey);
 	}
 
 	@Test(expected=NullPointerException.class)
 	public void testDocumentConstructorFromNullJSONBoth() {
 		JSONObject nullJSON = null;
 		String nullKey = null;
-		this.testDocument = new Document(nullJSON, nullKey);
+		this.testDocument = new BinaryValuedDocument(nullJSON, nullKey);
 	}
 
 	// Constructor from Document tests
@@ -426,14 +410,14 @@ public class DocumentTest {
 	@Test
 	public void testDocumentConstructorFromDocument() {
 		this.setupDocument();
-		this.testDocument = new Document(this.goldDocument);
+		this.testDocument = new BinaryValuedDocument(this.goldDocument);
 		assertTrue(this.testDocument.equals(this.goldDocument));
 	}
 
 	@Test(expected=NullPointerException.class)
 	public void testDocumentConstructorFromNullDocument() {
 		Document nullDocument = null;
-		this.testDocument = new Document(nullDocument);
+		this.testDocument = new BinaryValuedDocument(nullDocument);
 	}
 
 	// Constructor from Unstructured text tests
@@ -441,7 +425,7 @@ public class DocumentTest {
 	@Test
 	public void testDocumentConstructorFromUnstructuredText() {
 		this.setupDocumentUnstructuredDocument();
-		this.testDocument = new Document(this.unstructuredText, true);
+		this.testDocument = new BinaryValuedDocument(this.unstructuredText, true);
 		// Compare the words because this constructor
 		// does not instantiate a label
 		assertTrue(this.testDocument.getWords().equals(this.goldDocument.getWords()));
@@ -450,7 +434,7 @@ public class DocumentTest {
 	@Test(expected=NullPointerException.class)
 	public void testDocumentConstructorFromNullUnstructuredText() {
 		String nullString = null;
-		this.testDocument = new Document(nullString, true);
+		this.testDocument = new BinaryValuedDocument(nullString, true);
 	}
 
 	// Setter tests
@@ -516,6 +500,12 @@ public class DocumentTest {
 	}
 
 	@Test
+	public void testDocumentGetFeatures() {
+		this.setupDocument();
+		assertEquals(this.goldDocument.getFeatures(), this.goldDocumentWords);
+	}
+
+	@Test
 	public void testDocumentGetSysOutput() {
 		this.setupDocumentSysOutput();
 		assertThat(this.testDocumentFromJSON.getSysOutput(), is(maxKeyByValue(this.testDocumentProbabilities)));
@@ -528,13 +518,13 @@ public class DocumentTest {
 	public void testDocumentGetDocCount() {
 		Document.initialize();
 		assertTrue(Document.getDocCount() == 0);
-		this.testDocument = new Document(this.testDocumentBinaryString);
+		this.testDocument = new BinaryValuedDocument(this.testDocumentBinaryString);
 		assertTrue(Document.getDocCount() == 1);
 	}
 
 	@Test
 	public void testDocumentGetMagnitude() {
-		this.testDocument = new Document(this.testDocumentRealString);
+		this.testDocument = new BinaryValuedDocument(this.testDocumentRealString);
 		assertTrue(pseudoEqual(this.testDocument.getMagnitude(), this.goldMagnitude));
 	}
 }
